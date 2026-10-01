@@ -11,7 +11,8 @@ m-k extra Alice copies (w.l.o.g., the problem is invariant under them). Constrai
 
     Phi >= 0,
     tr_{all but A_1 B_1}(Phi) = rho,
-    tr_B(Phi) invariant under all permutations of the m Alice copies,
+    tr_B(Phi) invariant under all permutations of the m Alice copies (eliminated: the variables
+        are restricted to a sparse basis of these homogeneous equalities' null space),
     Phi^{T_S} >= 0 for one cut S per orbit of copy-cuts.
 
 Every PSD constraint is split into Schur blocks: an operator invariant under permuting groups
@@ -24,12 +25,15 @@ parameters is unchanged (the orbit parametrization already spans exactly the com
 
 import math
 import warnings
+from contextlib import contextmanager
 from typing import Literal, NamedTuple
 
 import numpy as np
 import qics
+import qics._stepper.kktsolver
 import scipy.linalg
 import scipy.sparse as sp
+import scipy.sparse.linalg
 from schur_weyl import schur_transform
 
 from sdp.symmetric import (
@@ -162,6 +166,10 @@ def polynomialConvexRoof(
     A, b = A[keep], b[keep]
     kept_rho = np.flatnonzero(keep[:n_rho])
 
+    # The permutation-invariance rows are homogeneous: eliminate them with x = Z z, ker(A_perm) = range(Z).
+    Z = _null_space_basis(A[len(kept_rho) :])
+    A, b = (A[: len(kept_rho)] @ Z).tocsr(), b[: len(kept_rho)]
+
     # Objective: tr((observable ot I) tr_B Phi).
     c = (marginal.observable_row(observable) @ param.M).real.toarray().reshape(-1, 1)
     if mode == "max":
@@ -181,17 +189,19 @@ def polynomialConvexRoof(
     G = -sp.vstack(G_blocks, format="csr")
     h = np.zeros((G.shape[0], 1))
 
-    model = qics.Model(c=c, A=A, b=b.reshape(-1, 1), G=G, h=h, cones=cones)
-    info = qics.Solver(model, verbose=verbose, **qics_opts).solve()
+    model = qics.Model(c=Z.T @ c, A=A, b=b.reshape(-1, 1), G=(G @ Z).tocsr(), h=h, cones=cones)
+    with _fortran_cholesky_solves():
+        info = qics.Solver(model, verbose=verbose, **qics_opts).solve()
     if info["sol_status"] != "optimal":
         warnings.warn(f"QICS finished with status {info['sol_status']!r} ({info['exit_status']}).")
 
-    x = info["x_opt"].ravel()
+    x = Z @ info["x_opt"].ravel()
     Phi = (param.M @ x).reshape(N, N)
     Phi = np.real(Phi) if real else (Phi + Phi.conj().T) / 2
 
-    # Dual: c + A^T y + G^T z = 0 gives c.x >= -y_rho . b_rho for every feasible x of any sigma.
-    y = info["y_opt"].ravel()[: len(kept_rho)]
+    # Dual: Z^T (c + A_rho^T y + G^T z) = 0, and every feasible x of any sigma is Z z (the eliminated
+    # rows have b = 0), so c.x >= -y . b_rho: the witness only involves the marginal rows.
+    y = info["y_opt"].ravel()
     W = np.zeros((D, D), dtype=float if real else complex)
     for y_r, r in zip(y, kept_rho):
         j1, j2, part = rho_funcs[r]
@@ -393,6 +403,76 @@ def _to_qics_rows(L: sp.spmatrix, real: bool) -> sp.csr_matrix:
     order = np.empty(2 * R, dtype=np.int64)
     order[0::2], order[1::2] = np.arange(R), np.arange(R) + R
     return stacked[order]
+
+
+def _null_space_basis(A: sp.csr_matrix, pivot_tol: float = 0.1) -> sp.csr_matrix:
+    """Sparse Z whose columns span ker A, for A of full row rank: A Z = 0 and x = Z z.
+
+    One pivot variable per row is solved for in terms of the free ones, x_P = -A_P^{-1} A_F x_F.
+    To keep this sparse, a row's pivot is, when possible, a variable appearing in no other row
+    (with |coefficient| >= pivot_tol * the row's largest), which makes A_P block triangular.
+    The remaining rows get pivots by QR with column pivoting among the unused variables.
+    """
+    r, n = A.shape
+    if r == 0:
+        return sp.eye(n, format="csr")
+    A = A.tocsr()
+    A.eliminate_zeros()
+    coo = A.tocoo()
+    col_count = np.bincount(coo.col, minlength=n)
+    row_max = np.zeros(r)
+    np.maximum.at(row_max, coo.row, np.abs(coo.data))
+
+    good = (col_count[coo.col] == 1) & (np.abs(coo.data) >= pivot_tol * row_max[coo.row])
+    rows, cols, vals = coo.row[good], coo.col[good], np.abs(coo.data[good])
+    order = np.lexsort((-vals, rows))  # per row, the largest coefficient first
+    rows, cols = rows[order], cols[order]
+    first = np.r_[True, rows[1:] != rows[:-1]]
+    pivot = np.full(r, -1)
+    pivot[rows[first]] = cols[first]
+
+    rest = np.flatnonzero(pivot < 0)
+    if len(rest):
+        unused = np.setdiff1d(np.arange(n), pivot[pivot >= 0])
+        sub = A[rest][:, unused].toarray()
+        _, R, piv = scipy.linalg.qr(sub, mode="economic", pivoting=True)
+        if np.abs(R[len(rest) - 1, len(rest) - 1]) < 1e-10 * np.abs(R[0, 0]):
+            raise RuntimeError("Equality constraints are not of full row rank.")
+        pivot[rest] = unused[piv[: len(rest)]]
+
+    free = np.setdiff1d(np.arange(n), pivot)
+    A_csc = A.tocsc()
+    X = sp.csr_matrix(scipy.sparse.linalg.spsolve(A_csc[:, pivot].tocsc(), A_csc[:, free].tocsc()))
+    X.data[np.abs(X.data) < 1e-13] = 0
+    X.eliminate_zeros()
+    Z = sp.vstack([-X, sp.eye(len(free))], format="csr")
+    position = np.empty(n, dtype=np.int64)
+    position[np.concatenate([pivot, free])] = np.arange(n)
+    return Z[position]
+
+
+@contextmanager
+def _fortran_cholesky_solves():
+    """Make QICS' Cholesky solves avoid copying the (n x n) factor on every call.
+
+    QICS factors C-ordered matrices, and scipy's cho_solve copies a C-ordered factor to Fortran order
+    before calling LAPACK; for n ~ 7000 that copy is ~10x the cost of the solve itself and it happens
+    ~10 times per iteration. The factored matrix is symmetric, so (c^T, not lower) is the same
+    factorization stored in Fortran order, and the transpose is a free view.
+    """
+    original = qics._stepper.kktsolver.cho_solve
+
+    def cho_solve(fact, b):
+        c, lower = fact
+        if c.flags.c_contiguous and not c.flags.f_contiguous:
+            fact = (c.T, not lower)
+        return original(fact, b)
+
+    qics._stepper.kktsolver.cho_solve = cho_solve
+    try:
+        yield
+    finally:
+        qics._stepper.kktsolver.cho_solve = original
 
 
 def _independent_rows(A: sp.csr_matrix, n_first: int, tol: float = 1e-9) -> np.ndarray:
