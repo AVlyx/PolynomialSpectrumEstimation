@@ -205,7 +205,7 @@ def test_real_and_complex_agree():
         assert real.value == pytest.approx(cplx.value, abs=1e-6)
 
 
-@pytest.mark.parametrize("k,m", [(1, 2), (1, 3), (2, 2), (2, 3)])
+@pytest.mark.parametrize("k,m", [(1, 2), (1, 3), (2, 2), (2, 3), (1, 4)])
 @pytest.mark.parametrize("mode", ["min", "max"])
 @pytest.mark.parametrize("real", [True, False])
 def test_matches_brute_force(k, m, mode, real):

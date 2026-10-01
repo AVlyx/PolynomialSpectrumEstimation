@@ -14,12 +14,12 @@ m-k extra Alice copies (w.l.o.g., the problem is invariant under them). Constrai
     tr_B(Phi) invariant under all permutations of the m Alice copies,
     Phi^{T_S} >= 0 for one cut S per orbit of copy-cuts.
 
-TODO: block-diagonalize the extra Alice copies with the Schur transform on
-(C^dA)^{ot (m-k)}, Phi = sum_mu I_{f^mu} ot X_mu with X_mu on Sym^k(C^D) ot U^mu_dA.
-This shrinks the PSD cones from S*dA^(m-k) to S*s_mu(1^dA) and makes the Schur
-complement cheaper to form; the number of free parameters is already reduced here.
-(For reference: dA = dB = 3, k = 1, m = 4 has 6768 parameters and takes ~12 s per
-QICS iteration, all of it inside the solver.)
+Every PSD constraint is split into Schur blocks: an operator invariant under permuting groups
+of copies is sum_lam Y_lam ot 1_{f^lam} in the Schur basis (schur_weyl.schur_transform), so it
+is PSD iff each compression V_{lam,T0}^T Y V_{lam,T0} is. For Phi, the cones shrink from S*dA^(m-k)
+to S*dim_weyl(lam, dA); for a cut transposing j of the extra copies, the transposed and the
+untransposed extras are reduced separately (S_j x S_{m-k-j} symmetry). The number of free
+parameters is unchanged (the orbit parametrization already spans exactly the commutant).
 """
 
 import math
@@ -30,6 +30,7 @@ import numpy as np
 import qics
 import scipy.linalg
 import scipy.sparse as sp
+from schur_weyl import schur_transform
 
 from sdp.symmetric import (
     SymmetricBasis,
@@ -166,13 +167,17 @@ def polynomialConvexRoof(
     if mode == "max":
         c = -c
 
-    # Cones: Phi >= 0 and one partial transpose per orbit of cuts.
-    G_blocks = [_to_qics_rows(param.M, real)]
-    cones = [qics.cones.PosSemidefinite(N, iscomplex=not real)]
-    for M_cut, dims_cut, transposed in _cuts(k, e, D, dA, S, E):
+    # Cones: Phi >= 0 and one partial transpose per orbit of cuts, each split into Schur blocks.
+    G_blocks, cones = [], []
+    for M_cut, dims_cut, transposed, j in _cuts(k, e, D, dA, S, E):
         L = congruence_map(M_cut)[partial_transpose_perm(dims_cut, transposed)] @ param.M
-        G_blocks.append(_to_qics_rows(L, real))
-        cones.append(qics.cones.PosSemidefinite(math.prod(dims_cut), iscomplex=not real))
+        outer = math.prod(dims_cut[:-2])
+        for C in _schur_compressions(outer, dA, j, e - j):
+            block = (congruence_map(C.T.tocsr()) @ L).tocsr()
+            block.data[np.abs(block.data) < 1e-13] = 0
+            block.eliminate_zeros()
+            G_blocks.append(_to_qics_rows(block, real))
+            cones.append(qics.cones.PosSemidefinite(C.shape[1], iscomplex=not real))
     G = -sp.vstack(G_blocks, format="csr")
     h = np.zeros((G.shape[0], 1))
 
@@ -339,20 +344,44 @@ def _trace_extras(mapk: sp.csr_matrix, S: int, E: int) -> sp.csr_matrix:
 
 
 def _cuts(k: int, e: int, D: int, dA: int, S: int, E: int):
-    """One partial transpose per orbit of cuts (l of the k AB copies, j of the e extra copies).
+    """Phi itself and one partial transpose per orbit of cuts (l of the k AB copies, j of the e extras).
 
     Cuts (l, j) and (k-l, e-j) are equivalent (full transposition preserves positivity), and so are
-    all cuts with the same (l, j) by the S_k x S_e symmetry of Phi. Yields (M, dims, transposed)
-    for the constraint (M Phi M^T)^{T_transposed} >= 0.
+    all cuts with the same (l, j) by the S_k x S_e symmetry of Phi. Yields (M, dims, transposed, j)
+    for the constraint (M Phi M^T)^{T_transposed} >= 0, where the last two entries of dims are the
+    j transposed and the e-j untransposed extra copies. (l, j) = (0, 0) is Phi >= 0 itself.
     """
-    reps = sorted({min((l, j), (k - l, e - j)) for l in range(k + 1) for j in range(e + 1)} - {(0, 0)})
+    reps = sorted({min((l, j), (k - l, e - j)) for l in range(k + 1) for j in range(e + 1)})
     for l, j in reps:
         if l == 0:
-            yield sp.eye(S * E, format="csr"), [S, dA**j, dA ** (e - j)], [1]
+            yield sp.eye(S * E, format="csr"), [S, dA**j, dA ** (e - j)], [1] if j > 0 else [], j
         else:
             Sl, Skl = math.comb(l + D - 1, l), math.comb(k - l + D - 1, k - l)
             M = sp.kron(split_isometry(k, D, l), sp.eye(E), format="csr")
-            yield M, [Sl, Skl, dA**j, dA ** (e - j)], [0, 2] if j > 0 else [0]
+            yield M, [Sl, Skl, dA**j, dA ** (e - j)], [0, 2] if j > 0 else [0], j
+
+
+def _schur_compressions(outer: int, dA: int, j: int, r: int) -> list[sp.csr_matrix]:
+    """Isometries C with Y >= 0 iff C^T Y C >= 0 for all C, for Y on C^outer ot (C^dA)^{ot j} ot (C^dA)^{ot r}
+    invariant under S_j x S_r permuting the last two groups of copies.
+
+    By Schur-Weyl duality such Y is sum_{mu, nu} Y_{mu nu} ot 1_{f^mu} ot 1_{f^nu}, so one tableau per
+    irrep suffices: C = 1_outer ot V_{mu, T0} ot V_{nu, T0}, of size S * dim_weyl(mu) * dim_weyl(nu).
+    """
+    out = []
+    for Vmu in _schur_isometries(dA, j):
+        for Vnu in _schur_isometries(dA, r):
+            out.append(sp.kron(sp.eye(outer), sp.kron(Vmu, Vnu), format="csr"))
+    return out
+
+
+def _schur_isometries(d: int, n: int) -> list[sp.csr_matrix]:
+    """V_{lam, T0} : C^{dim_weyl(lam, d)} -> (C^d)^{ot n} for every lam |- n with len(lam) <= d."""
+    out = []
+    for V in schur_transform(d, n).values():
+        V0 = np.where(np.abs(V[0]) < 1e-13, 0.0, V[0])
+        out.append(sp.csr_matrix(V0))
+    return out
 
 
 def _to_qics_rows(L: sp.spmatrix, real: bool) -> sp.csr_matrix:
