@@ -1,5 +1,6 @@
 import itertools
 import math
+import warnings
 
 import numpy as np
 import pytest
@@ -154,6 +155,7 @@ def test_marginal_maps(dA, dB, k):
     assert np.allclose((basis.local_marginal_map(dA, dB) @ X.ravel()).reshape(dA**k, dA**k), alice)
 
 
+@pytest.mark.filterwarnings("error")  # restricted to range(rho) the SDP is strictly feasible
 @pytest.mark.parametrize("k,m", [(2, 2), (1, 2), (1, 3), (2, 3), (3, 3)])
 def test_pure_state_is_exact(k, m):
     psi = np.array([np.cos(0.3), 0, 0, np.sin(0.3)])
@@ -215,6 +217,31 @@ def test_matches_brute_force(k, m, mode, real):
     obs = obs.real if real else obs
     reduced = polynomialConvexRoof(rho, obs, (2, 2), k, m, mode=mode).value
     assert reduced == pytest.approx(brute_force(rho, obs, (2, 2), k, m, mode=mode), abs=1e-5)
+
+
+@pytest.mark.parametrize("k,m", [(1, 3), (2, 2), (2, 3)])
+@pytest.mark.parametrize("real", [True, False])
+def test_range_restriction_is_exact(k, m, real):
+    rng = np.random.default_rng(7 * k + m)
+    rho = random_state(4, 2, rng, real=real)
+    obs = random_hermitian(4, rng)
+    obs = obs.real if real else obs
+    restricted = polynomialConvexRoof(rho, obs, (2, 2), k, m)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # no Slater point without the restriction
+        full = polynomialConvexRoof(rho, obs, (2, 2), k, m, rank_tol=None)
+    # Same SDP, but unrestricted the solver can use ~tol weight on ker(rho), whose ~sqrt(tol) cross terms
+    # with range(rho) lower the objective by up to ~1e-5: the restricted value is the accurate one.
+    assert full.value - 1e-7 <= restricted.value <= full.value + 1e-4
+    assert restricted.info["x_opt"].size < full.info["x_opt"].size
+    # Phi and W are lifted back to the full space.
+    basis = SymmetricBasis(k, 4)
+    S, E = basis.dim, 2 ** (m - k)
+    Phi_k = np.einsum("aebe->ab", restricted.Phi.reshape(S, E, S, E))
+    assert np.allclose((basis.first_copy_marginal_map() @ Phi_k.ravel()).reshape(4, 4), rho, atol=1e-6)
+    assert np.trace(restricted.witness @ rho).real == pytest.approx(restricted.value, abs=1e-6)
+    P = rho @ np.linalg.pinv(rho)  # projector onto range(rho)
+    assert np.allclose(P @ restricted.witness @ P, restricted.witness)
 
 
 @pytest.mark.parametrize("d,k", [(2, 3), (3, 3), (2, 4)])

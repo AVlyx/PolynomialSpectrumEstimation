@@ -21,6 +21,12 @@ is PSD iff each compression V_{lam,T0}^T Y V_{lam,T0} is. For Phi, the cones shr
 to S*dim_weyl(lam, dA); for a cut transposing j of the extra copies, the transposed and the
 untransposed extras are reduced separately (S_j x S_{m-k-j} symmetry). The number of free
 parameters is unchanged (the orbit parametrization already spans exactly the commutant).
+
+If rho has rank r < dA*dB, the AB copies are restricted to its range R = range(V), V (D x r) an
+isometry: Phi >= 0 with first-copy marginal rho is supported on Sym^k(R) ot (C^dA)^{ot (m-k)} anyway,
+so this is exact. The PPT constraints keep their form in the coordinates of R (transposing a copy of
+V Y V^dag is congruence of Y^T by conj(V)), so only the map to tr_B Phi depends on V. This shrinks
+the variable and restores strict feasibility (the reduced marginal is full rank).
 """
 
 import math
@@ -39,6 +45,7 @@ from schur_weyl import schur_transform
 from sdp.symmetric import (
     SymmetricBasis,
     all_digits,
+    compressed_local_marginal_map,
     congruence_map,
     partial_transpose_perm,
     split_isometry,
@@ -56,7 +63,9 @@ class ConvexRoofResult(NamedTuple):
     witness: np.ndarray
     """Hermitian W on C^dA ot C^dB from the dual. For every state sigma, the SDP value (and the
     convex roof) at sigma is >= tr(W sigma) for ``mode="min"``, and <= tr(W sigma) for ``mode="max"``.
-    tr(W rho) equals ``value`` up to solver accuracy."""
+    tr(W rho) equals ``value`` up to solver accuracy. If the SDP was restricted to the range of a
+    rank-deficient rho (see ``rank_tol``), W is supported on that range and the bound only holds for
+    sigma supported on it."""
     info: dict
     """Raw QICS output."""
 
@@ -68,6 +77,7 @@ def polynomialConvexRoof(
     full_state_registers: int,
     alice_copies: int,
     mode: Literal["min"] | Literal["max"] = "min",
+    rank_tol: float | None = 1e-10,
     verbose: int = 0,
     **qics_opts,
 ) -> ConvexRoofResult:
@@ -96,6 +106,9 @@ def polynomialConvexRoof(
         that are part of the full-state copies (so there are m - k extra Alice-only copies). If
         m <= k there are no extra copies and this is the full-state SDP on Omega_k.
     mode : "min" for a lower bound on the convex roof, "max" for an upper bound on the concave roof.
+    rank_tol : eigenvalues of rho <= rank_tol are treated as zero and the SDP is restricted to the
+        range of rho (exact, and much smaller for low-rank rho). The discarded eigenvalues perturb rho
+        by at most their sum in trace norm. None disables the restriction.
     verbose : QICS verbosity (0 to 3).
     **qics_opts : passed to ``qics.Solver`` (e.g. max_iter, tol_gap, tol_feas, max_time).
     """
@@ -134,9 +147,17 @@ def polynomialConvexRoof(
     if real:
         rho, observable = np.real(rho), np.real(observable)
 
+    # Restrict the AB copies to range(rho) = range(V); below, rho and D are those of the restriction.
+    V = _range_isometry(rho, rank_tol)
+    if V is not None:
+        rho = V.conj().T @ rho @ V
+        rho = (rho + rho.conj().T) / 2
+        D = V.shape[1]
+
     basis = SymmetricBasis(k, D)
     S, E = basis.dim, dA**e
     N = S * E
+    U = None if V is None else basis.embedding(V)
 
     param = _PhiParametrization(S, E, dA, e, real)
 
@@ -153,7 +174,8 @@ def polynomialConvexRoof(
         b_blocks.append(np.imag(rho[triu])[off])
         rho_funcs += [(j1, j2, "im") for j1, j2 in zip(triu[0][off], triu[1][off])]
 
-    marginal = _AliceMarginal(basis, dA, dB, e)
+    alice_map = basis.local_marginal_map(dA, dB) if U is None else compressed_local_marginal_map(U, dA, dB, k)
+    marginal = _AliceMarginal(alice_map, k, dA, e, S)
     A_perm = marginal.permutation_invariance_rows() @ param.M
     A_blocks.append(A_perm.real)
     if not real:
@@ -203,8 +225,8 @@ def polynomialConvexRoof(
     # rows have b = 0), so c.x >= -y . b_rho: the witness only involves the marginal rows.
     y = info["y_opt"].ravel()
     W = np.zeros((D, D), dtype=float if real else complex)
-    for y_r, r in zip(y, kept_rho):
-        j1, j2, part = rho_funcs[r]
+    for y_r, row in zip(y, kept_rho):
+        j1, j2, part = rho_funcs[row]
         B = np.zeros((D, D), dtype=complex)  # tr(B rho) = Re rho[j1, j2] or Im rho[j1, j2]
         if part == "re":
             B[j2, j1] += 0.5
@@ -213,6 +235,11 @@ def polynomialConvexRoof(
             B[j2, j1] += 0.5 / 1j
             B[j1, j2] -= 0.5 / 1j
         W = W + (-y_r) * (B.real if real else B)
+
+    if V is not None:  # back to C^dA ot C^dB and Sym^k(C^dA ot C^dB) ot (C^dA)^{ot e}
+        W = V @ W @ V.conj().T
+        lift = np.kron(SymmetricBasis(k, dA * dB).V() @ U, np.eye(E))
+        Phi = lift @ Phi @ lift.conj().T
 
     value = info["p_obj"]
     if mode == "max":
@@ -272,11 +299,11 @@ class _PhiParametrization:
 class _AliceMarginal:
     """Linear functionals of X = tr_B Phi on (C^dA)^{ot m}, ordered A_1..A_k then the extra copies."""
 
-    def __init__(self, basis: SymmetricBasis, dA: int, dB: int, e: int):
-        self.k, self.e, self.dA = basis.k, e, dA
-        self.S, self.E = basis.dim, dA**e
-        self.Ka = dA**basis.k
-        self.T = basis.local_marginal_map(dA, dB)  # (Ka^2 x S^2)
+    def __init__(self, local_marginal_map: sp.csr_matrix, k: int, dA: int, e: int, S: int):
+        self.k, self.e, self.dA = k, e, dA
+        self.S, self.E = S, dA**e
+        self.Ka = dA**k
+        self.T = local_marginal_map  # (Ka^2 x S^2), tr_{B_1..B_k} of the Sym^k part
 
     def entries(self, P: np.ndarray, Q: np.ndarray, weights: np.ndarray) -> sp.csr_matrix:
         """Sparse (len(P) x N^2) matrix whose row t is weights[t] * X[P[t], Q[t]] as a function of vec(Phi)."""
@@ -339,6 +366,15 @@ class _AliceMarginal:
         plus = self.entries(P[others], Q[others], np.ones(n_con))
         minus = self.entries(P[anchors], Q[anchors], np.ones(n_con))
         return (plus - minus).tocsr()
+
+
+def _range_isometry(rho: np.ndarray, rank_tol: float | None) -> np.ndarray | None:
+    """Isometry onto the eigenvectors of rho with eigenvalue > rank_tol, or None if that is all of them."""
+    if rank_tol is None:
+        return None
+    w, V = np.linalg.eigh(rho)
+    keep = w > rank_tol
+    return None if keep.all() else V[:, keep]
 
 
 def _trace_extras(mapk: sp.csr_matrix, S: int, E: int) -> sp.csr_matrix:
@@ -427,7 +463,7 @@ def _null_space_basis(A: sp.csr_matrix, pivot_tol: float = 0.1) -> sp.csr_matrix
     rows, cols, vals = coo.row[good], coo.col[good], np.abs(coo.data[good])
     order = np.lexsort((-vals, rows))  # per row, the largest coefficient first
     rows, cols = rows[order], cols[order]
-    first = np.r_[True, rows[1:] != rows[:-1]]
+    first = np.diff(rows, prepend=-1) != 0
     pivot = np.full(r, -1)
     pivot[rows[first]] = cols[first]
 
@@ -442,7 +478,8 @@ def _null_space_basis(A: sp.csr_matrix, pivot_tol: float = 0.1) -> sp.csr_matrix
 
     free = np.setdiff1d(np.arange(n), pivot)
     A_csc = A.tocsc()
-    X = sp.csr_matrix(scipy.sparse.linalg.spsolve(A_csc[:, pivot].tocsc(), A_csc[:, free].tocsc()))
+    X = scipy.sparse.linalg.spsolve(A_csc[:, pivot].tocsc(), A_csc[:, free].tocsc())
+    X = sp.csr_matrix(X if sp.issparse(X) else X.reshape(r, len(free)))  # dense 1-D if len(free) == 1
     X.data[np.abs(X.data) < 1e-13] = 0
     X.eliminate_zeros()
     Z = sp.vstack([-X, sp.eye(len(free))], format="csr")

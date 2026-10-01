@@ -85,6 +85,29 @@ class SymmetricBasis:
         traced = encode(self.digits % dB, dB)
         return self.trace_map(kept, traced, dA**self.k)
 
+    def embedding(self, V: np.ndarray) -> np.ndarray:
+        """U = V^{ot k} V_k^dag : Sym^k(C^D) -> (C^n)^{ot k} for an isometry V (n x D), dense (n^k x dim)."""
+        k = self.k
+        X = self.V().T.toarray().reshape((self.D,) * k + (self.dim,))
+        for t in range(k):
+            X = np.moveaxis(np.tensordot(V, X, axes=([1], [t])), 0, t)
+        return X.reshape(V.shape[0] ** k, self.dim)
+
+
+def compressed_local_marginal_map(U: np.ndarray, dA: int, dB: int, k: int) -> sp.csr_matrix:
+    """Map Y -> tr_{B_1..B_k}(U Y U^dag) on (C^dA)^{ot k}, for U : C^S -> (C^dA ot C^dB)^{ot k}.
+
+    Same layout as ``SymmetricBasis.local_marginal_map`` (which is the case U = V_k^dag), as a sparse
+    (dA^(2k) x S^2) matrix; complex if U is.
+    """
+    S = U.shape[1]
+    Ka, Kb = dA**k, dB**k
+    T = U.reshape((dA, dB) * k + (S,))
+    T = T.transpose(list(range(0, 2 * k, 2)) + list(range(1, 2 * k, 2)) + [2 * k]).reshape(Ka, Kb, S)
+    M = np.einsum("abs,cbt->acst", T, T.conj(), optimize=True).reshape(Ka * Ka, S * S)
+    M[np.abs(M) < 1e-13] = 0
+    return sp.csr_matrix(M)
+
 
 def split_isometry(k: int, D: int, l: int) -> sp.csr_matrix:
     """W_l = (V_l ot V_{k-l}) V_k^dag : Sym^k(C^D) -> Sym^l(C^D) ot Sym^{k-l}(C^D)."""
