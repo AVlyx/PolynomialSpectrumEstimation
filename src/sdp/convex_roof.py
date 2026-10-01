@@ -112,139 +112,182 @@ def polynomialConvexRoof(
     verbose : QICS verbosity (0 to 3).
     **qics_opts : passed to ``qics.Solver`` (e.g. max_iter, tol_gap, tol_feas, max_time).
     """
-    dA, dB = dims
-    D = dA * dB
-    k = full_state_registers
-    m = max(alice_copies, k)
-    e = m - k
-    if k < 1:
-        raise ValueError("full_state_registers must be at least 1.")
-    if mode not in ("min", "max"):
-        raise ValueError(f"mode must be 'min' or 'max', got {mode!r}.")
-
-    rho = np.asarray(rho)
-    if rho.shape != (D, D):
-        raise ValueError(f"rho has shape {rho.shape}, expected {(D, D)} for dims {dims}.")
-    if not np.allclose(rho, rho.conj().T):
-        raise ValueError("rho is not Hermitian.")
-    if not np.isclose(np.trace(rho).real, 1.0):
-        raise ValueError("rho does not have unit trace.")
-
-    observable = np.asarray(observable)
-    n_obs = round(math.log(observable.shape[0], dA)) if observable.shape[0] > 1 else 0
-    if observable.shape != (dA**n_obs, dA**n_obs):
-        raise ValueError(f"observable has shape {observable.shape}, expected (dA^n, dA^n) with dA = {dA}.")
-    if n_obs > m:
-        raise ValueError(f"observable acts on {n_obs} Alice copies but only max(k, m) = {m} are available.")
-    if not np.allclose(observable, observable.conj().T):
-        raise ValueError("observable is not Hermitian.")
-
-    rho_real = np.max(np.abs(np.imag(rho))) < REAL_TOL
-    obs_real = np.max(np.abs(np.imag(observable))) < REAL_TOL
-    real = rho_real and obs_real
-    if rho_real and not obs_real:
-        warnings.warn("rho is real but the observable is not: optimizing over complex decompositions.")
-    if real:
-        rho, observable = np.real(rho), np.real(observable)
-
-    # Restrict the AB copies to range(rho) = range(V); below, rho and D are those of the restriction.
-    V = _range_isometry(rho, rank_tol)
-    if V is not None:
-        rho = V.conj().T @ rho @ V
-        rho = (rho + rho.conj().T) / 2
-        D = V.shape[1]
-
-    basis = SymmetricBasis(k, D)
-    S, E = basis.dim, dA**e
-    N = S * E
-    U = None if V is None else basis.embedding(V)
-
-    param = _PhiParametrization(S, E, dA, e, real)
-
-    # Linear equalities: marginal equals rho, and tr_B Phi is permutation invariant.
-    rho_map = _trace_extras(basis.first_copy_marginal_map(), S, E)
-    triu = np.triu_indices(D)
-    rho_rows = (triu[0] * D + triu[1]).astype(np.int64)
-    A_rho = rho_map[rho_rows] @ param.M  # complex, one row per entry rho[j1, j2] with j1 <= j2
-    rho_funcs = [(j1, j2, "re") for j1, j2 in zip(*triu)]
-    A_blocks, b_blocks = [A_rho.real], [np.real(rho[triu])]
-    if not real:
-        off = triu[0] != triu[1]
-        A_blocks.append(A_rho[np.flatnonzero(off)].imag)
-        b_blocks.append(np.imag(rho[triu])[off])
-        rho_funcs += [(j1, j2, "im") for j1, j2 in zip(triu[0][off], triu[1][off])]
-
-    alice_map = basis.local_marginal_map(dA, dB) if U is None else compressed_local_marginal_map(U, dA, dB, k)
-    marginal = _AliceMarginal(alice_map, k, dA, e, S)
-    A_perm = marginal.permutation_invariance_rows() @ param.M
-    A_blocks.append(A_perm.real)
-    if not real:
-        A_blocks.append(A_perm.imag)
-    n_rho = len(rho_funcs)
-
-    A = sp.vstack(A_blocks, format="csr")
-    b = np.concatenate(b_blocks + [np.zeros(A.shape[0] - n_rho)])
-    keep = _independent_rows(A, n_rho)
-    A, b = A[keep], b[keep]
-    kept_rho = np.flatnonzero(keep[:n_rho])
-
-    # The permutation-invariance rows are homogeneous: eliminate them with x = Z z, ker(A_perm) = range(Z).
-    Z = _null_space_basis(A[len(kept_rho) :])
-    A, b = (A[: len(kept_rho)] @ Z).tocsr(), b[: len(kept_rho)]
-
-    # Objective: tr((observable ot I) tr_B Phi).
-    c = (marginal.observable_row(observable) @ param.M).real.toarray().reshape(-1, 1)
-    if mode == "max":
-        c = -c
-
-    # Cones: Phi >= 0 and one partial transpose per orbit of cuts, each split into Schur blocks.
-    G_blocks, cones = [], []
-    for M_cut, dims_cut, transposed, j in _cuts(k, e, D, dA, S, E):
-        L = congruence_map(M_cut)[partial_transpose_perm(dims_cut, transposed)] @ param.M
-        outer = math.prod(dims_cut[:-2])
-        for C in _schur_compressions(outer, dA, j, e - j):
-            block = (congruence_map(C.T.tocsr()) @ L).tocsr()
-            block.data[np.abs(block.data) < 1e-13] = 0
-            block.eliminate_zeros()
-            G_blocks.append(_to_qics_rows(block, real))
-            cones.append(qics.cones.PosSemidefinite(C.shape[1], iscomplex=not real))
-    G = -sp.vstack(G_blocks, format="csr")
-    h = np.zeros((G.shape[0], 1))
-
-    model = qics.Model(c=Z.T @ c, A=A, b=b.reshape(-1, 1), G=(G @ Z).tocsr(), h=h, cones=cones)
-    with _fortran_cholesky_solves():
-        info = qics.Solver(model, verbose=verbose, **qics_opts).solve()
-    if info["sol_status"] != "optimal":
-        warnings.warn(f"QICS finished with status {info['sol_status']!r} ({info['exit_status']}).")
-
-    x = Z @ info["x_opt"].ravel()
-    Phi = (param.M @ x).reshape(N, N)
-    Phi = np.real(Phi) if real else (Phi + Phi.conj().T) / 2
-
-    # Dual: Z^T (c + A_rho^T y + G^T z) = 0, and every feasible x of any sigma is Z z (the eliminated
-    # rows have b = 0), so c.x >= -y . b_rho: the witness only involves the marginal rows.
-    y = info["y_opt"].ravel()
-    W = np.zeros((D, D), dtype=float if real else complex)
-    for y_r, row in zip(y, kept_rho):
-        j1, j2, part = rho_funcs[row]
-        B = np.zeros((D, D), dtype=complex)  # tr(B rho) = Re rho[j1, j2] or Im rho[j1, j2]
-        if part == "re":
-            B[j2, j1] += 0.5
-            B[j1, j2] += 0.5
-        else:
-            B[j2, j1] += 0.5 / 1j
-            B[j1, j2] -= 0.5 / 1j
-        W = W + (-y_r) * (B.real if real else B)
-
-    if V is not None:  # back to C^dA ot C^dB and Sym^k(C^dA ot C^dB) ot (C^dA)^{ot e}
-        W = V @ W @ V.conj().T
-        lift = np.kron(SymmetricBasis(k, dA * dB).V() @ U, np.eye(E))
-        Phi = lift @ Phi @ lift.conj().T
-
-    value = info["p_obj"]
+    sdp = _ConvexRoofSDP(rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol)
+    info = sdp.solve(verbose=verbose, **qics_opts)
+    value, W = info["p_obj"], sdp.witness(info["y_opt"])
     if mode == "max":
         value, W = -value, -W
-    return ConvexRoofResult(float(value), Phi, W, info)
+    return ConvexRoofResult(float(value), sdp.lift(sdp.phi(info["x_opt"])), W, info)
+
+
+class _ConvexRoofSDP:
+    """The SDP of ``polynomialConvexRoof``, assembled once so that it can be re-solved with other objectives.
+
+    It is always a minimization: for ``mode="max"`` the objective ``c`` is negated. If rho is rank deficient
+    the AB copies live in range(rho) (``V`` is the isometry, ``D`` the restricted dimension); ``phi`` returns
+    Phi in those coordinates and ``lift`` maps it back. The QICS variables z are the free parameters left
+    after eliminating the permutation-invariance equalities, with parameters x = Z z and vec(Phi) = M x.
+    """
+
+    def __init__(self, rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol):
+        dA, dB = dims
+        D = dA * dB
+        k = full_state_registers
+        m = max(alice_copies, k)
+        e = m - k
+        if k < 1:
+            raise ValueError("full_state_registers must be at least 1.")
+        if mode not in ("min", "max"):
+            raise ValueError(f"mode must be 'min' or 'max', got {mode!r}.")
+
+        rho = np.asarray(rho)
+        if rho.shape != (D, D):
+            raise ValueError(f"rho has shape {rho.shape}, expected {(D, D)} for dims {dims}.")
+        if not np.allclose(rho, rho.conj().T):
+            raise ValueError("rho is not Hermitian.")
+        if not np.isclose(np.trace(rho).real, 1.0):
+            raise ValueError("rho does not have unit trace.")
+
+        observable = np.asarray(observable)
+        n_obs = round(math.log(observable.shape[0], dA)) if observable.shape[0] > 1 else 0
+        if observable.shape != (dA**n_obs, dA**n_obs):
+            raise ValueError(f"observable has shape {observable.shape}, expected (dA^n, dA^n) with dA = {dA}.")
+        if n_obs > m:
+            raise ValueError(f"observable acts on {n_obs} Alice copies but only max(k, m) = {m} are available.")
+        if not np.allclose(observable, observable.conj().T):
+            raise ValueError("observable is not Hermitian.")
+
+        rho_real = np.max(np.abs(np.imag(rho))) < REAL_TOL
+        obs_real = np.max(np.abs(np.imag(observable))) < REAL_TOL
+        real = rho_real and obs_real
+        if rho_real and not obs_real:
+            warnings.warn("rho is real but the observable is not: optimizing over complex decompositions.")
+        if real:
+            rho, observable = np.real(rho), np.real(observable)
+
+        # Restrict the AB copies to range(rho) = range(V); below, rho and D are those of the restriction.
+        V = _range_isometry(rho, rank_tol)
+        if V is not None:
+            rho = V.conj().T @ rho @ V
+            rho = (rho + rho.conj().T) / 2
+            D = V.shape[1]
+
+        basis = SymmetricBasis(k, D)
+        S, E = basis.dim, dA**e
+        N = S * E
+        U = None if V is None else basis.embedding(V)
+
+        param = _PhiParametrization(S, E, dA, e, real)
+
+        # Linear equalities: marginal equals rho, and tr_B Phi is permutation invariant.
+        rho_map = _trace_extras(basis.first_copy_marginal_map(), S, E)
+        triu = np.triu_indices(D)
+        rho_rows = (triu[0] * D + triu[1]).astype(np.int64)
+        A_rho = rho_map[rho_rows] @ param.M  # complex, one row per entry rho[j1, j2] with j1 <= j2
+        rho_funcs = [(j1, j2, "re") for j1, j2 in zip(*triu)]
+        A_blocks, b_blocks = [A_rho.real], [np.real(rho[triu])]
+        if not real:
+            off = triu[0] != triu[1]
+            A_blocks.append(A_rho[np.flatnonzero(off)].imag)
+            b_blocks.append(np.imag(rho[triu])[off])
+            rho_funcs += [(j1, j2, "im") for j1, j2 in zip(triu[0][off], triu[1][off])]
+
+        alice_map = basis.local_marginal_map(dA, dB) if U is None else compressed_local_marginal_map(U, dA, dB, k)
+        marginal = _AliceMarginal(alice_map, k, dA, e, S)
+        A_perm = marginal.permutation_invariance_rows() @ param.M
+        A_blocks.append(A_perm.real)
+        if not real:
+            A_blocks.append(A_perm.imag)
+        n_rho = len(rho_funcs)
+
+        A = sp.vstack(A_blocks, format="csr")
+        b = np.concatenate(b_blocks + [np.zeros(A.shape[0] - n_rho)])
+        keep = _independent_rows(A, n_rho)
+        A, b = A[keep], b[keep]
+        kept_rho = np.flatnonzero(keep[:n_rho])
+
+        # The permutation-invariance rows are homogeneous: eliminate them with x = Z z, ker(A_perm) = range(Z).
+        Z = _null_space_basis(A[len(kept_rho) :])
+        A, b = (A[: len(kept_rho)] @ Z).tocsr(), b[: len(kept_rho)]
+
+        # Objective: tr((observable ot I) tr_B Phi).
+        c = (marginal.observable_row(observable) @ param.M).real.toarray().reshape(-1, 1)
+        if mode == "max":
+            c = -c
+
+        # Cones: Phi >= 0 and one partial transpose per orbit of cuts, each split into Schur blocks.
+        G_blocks, cones = [], []
+        for M_cut, dims_cut, transposed, j in _cuts(k, e, D, dA, S, E):
+            L = congruence_map(M_cut)[partial_transpose_perm(dims_cut, transposed)] @ param.M
+            outer = math.prod(dims_cut[:-2])
+            for C in _schur_compressions(outer, dA, j, e - j):
+                block = (congruence_map(C.T.tocsr()) @ L).tocsr()
+                block.data[np.abs(block.data) < 1e-13] = 0
+                block.eliminate_zeros()
+                G_blocks.append(_to_qics_rows(block, real))
+                cones.append(qics.cones.PosSemidefinite(C.shape[1], iscomplex=not real))
+        G = -sp.vstack(G_blocks, format="csr")
+
+        self.dims, self.k, self.e, self.D, self.S, self.E, self.N = dims, k, e, D, S, E, N
+        self.real, self.V, self.U, self.param, self.Z = real, V, U, param, Z
+        self.kept_rho, self.rho_funcs = kept_rho, rho_funcs
+        self.c, self.A, self.b = Z.T @ c, A, b.reshape(-1, 1)
+        self.G, self.h, self.cones = (G @ Z).tocsr(), np.zeros((G.shape[0], 1)), cones
+
+    def solve(self, c: np.ndarray | None = None, cap: float | None = None, verbose: int = 0, **qics_opts) -> dict:
+        """Minimize c.z (default: the roof objective ``self.c``), additionally subject to self.c.z <= cap if given.
+
+        Returns the QICS info dict; ``info["x_opt"]`` is z.
+        """
+        G, h, cones = self.G, self.h, self.cones
+        if cap is not None:
+            G = sp.vstack([sp.csr_matrix(self.c.T), G], format="csr")
+            h = np.vstack([[[cap]], h])
+            cones = [qics.cones.NonNegOrthant(1)] + cones
+        c = self.c if c is None else np.asarray(c, dtype=float).reshape(-1, 1)
+        model = qics.Model(c=c, A=self.A, b=self.b, G=G, h=h, cones=cones)
+        with _fortran_cholesky_solves():
+            info = qics.Solver(model, verbose=verbose, **qics_opts).solve()
+        if info["sol_status"] != "optimal":
+            warnings.warn(f"QICS finished with status {info['sol_status']!r} ({info['exit_status']}).")
+        return info
+
+    def phi(self, z: np.ndarray) -> np.ndarray:
+        """Phi on Sym^k(range rho) ot (C^dA)^{ot e} for the QICS variables z."""
+        Phi = (self.param.M @ (self.Z @ np.ravel(z))).reshape(self.N, self.N)
+        return np.real(Phi) if self.real else (Phi + Phi.conj().T) / 2
+
+    def lift(self, Phi: np.ndarray) -> np.ndarray:
+        """Phi from the coordinates of range(rho) back to Sym^k(C^dA ot C^dB) ot (C^dA)^{ot e}."""
+        if self.V is None:
+            return Phi
+        dA, dB = self.dims
+        lift = np.kron(SymmetricBasis(self.k, dA * dB).V() @ self.U, np.eye(self.E))
+        return lift @ Phi @ lift.conj().T
+
+    def operator_objective(self, Y: np.ndarray) -> np.ndarray:
+        """c with c.z = tr((Y ot 1) Phi) for a Hermitian Y on Sym^k(range rho) (the extra copies traced out)."""
+        A_T = sp.kron(sp.csr_matrix(np.asarray(Y).T), sp.eye(self.E), format="csr")
+        row = sp.csr_matrix(A_T.reshape(1, -1)) @ self.param.M
+        return self.Z.T @ np.asarray(row.real.todense()).reshape(-1, 1)
+
+    def witness(self, y: np.ndarray) -> np.ndarray:
+        """Witness W on C^dA ot C^dB for the minimization, from the dual variables y of the original objective."""
+        # Dual: Z^T (c + A_rho^T y + G^T z) = 0, and every feasible x of any sigma is Z z (the eliminated
+        # rows have b = 0), so c.x >= -y . b_rho: the witness only involves the marginal rows.
+        D, real = self.D, self.real
+        W = np.zeros((D, D), dtype=float if real else complex)
+        for y_r, row in zip(np.ravel(y), self.kept_rho):
+            j1, j2, part = self.rho_funcs[row]
+            B = np.zeros((D, D), dtype=complex)  # tr(B rho) = Re rho[j1, j2] or Im rho[j1, j2]
+            if part == "re":
+                B[j2, j1] += 0.5
+                B[j1, j2] += 0.5
+            else:
+                B[j2, j1] += 0.5 / 1j
+                B[j1, j2] -= 0.5 / 1j
+            W = W + (-y_r) * (B.real if real else B)
+        return W if self.V is None else self.V @ W @ self.V.conj().T
 
 
 class _PhiParametrization:
