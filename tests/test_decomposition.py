@@ -1,9 +1,11 @@
 import numpy as np
 import pytest
 
-from sdp import schur_observable
+from sdp import monomial_observable, schur_observable
 from sdp.symmetric import SymmetricBasis
 from tensor_decomposition import (
+    ENTANGLEMENT_ENTROPY,
+    SpectralFunction,
     ensembleValue,
     exactDecomposition,
     momentDecomposition,
@@ -11,7 +13,13 @@ from tensor_decomposition import (
     refineDecomposition,
     roofDecomposition,
 )
-from tensor_decomposition.decomposition import _EnsembleObjective, _hermitian_basis, _joint_diagonalize, _lifted
+from tensor_decomposition.decomposition import (
+    _EnsembleObjective,
+    _hermitian_basis,
+    _joint_diagonalize,
+    _lifted,
+    _objective,
+)
 
 ANTISYM_2 = schur_observable({(1, 1): 1.0}, 2)  # tr(. rho_A^{ot 2}) = det(rho_A) for qubits
 
@@ -193,6 +201,43 @@ def test_roof_decomposition_max():
     assert res.value <= res.sdp_value + 1e-7
     assert res.value >= res.info["rounded_value"] - 1e-12
     assert res.value == pytest.approx(res.sdp_value, rel=1e-3)
+    assert np.allclose(average_state(res.probabilities, res.states), rho)
+
+
+def binary_entropy(x):
+    return float(-sum(t * np.log2(t) for t in (x, 1 - x) if t > 0))
+
+
+def test_spectral_objective_value_and_gradient():
+    rng = np.random.default_rng(9)
+    X = rng.normal(size=(6, 4)) + 1j * rng.normal(size=(6, 4))
+    obj = _objective(ENTANGLEMENT_ENTROPY, (2, 3))
+    F, G = obj(X)
+    N = np.linalg.norm(X, axis=0) ** 2
+    expected = sum(n * binary_entropy(np.linalg.eigvalsh(alice_marginal(x, (2, 3)) / n)[0]) for n, x in zip(N, X.T))
+    assert F == pytest.approx(expected)
+    dX = rng.normal(size=X.shape) + 1j * rng.normal(size=X.shape)
+    h = 1e-6
+    numeric = (obj(X + h * dX)[0] - obj(X - h * dX)[0]) / (2 * h)
+    assert numeric == pytest.approx(2 * np.vdot(G, dX).real, rel=1e-6)
+
+
+def test_spectral_function_matches_polynomial():
+    """f(x) = x^2 is tr(rho_A^2), the monomial m_(2)."""
+    rng = np.random.default_rng(10)
+    p, X = random_ensemble(9, 5, rng)
+    square = SpectralFunction(f=lambda x: x**2, df=lambda x: 2 * x)
+    assert ensembleValue(square, (3, 3), p, X) == pytest.approx(ensembleValue(monomial_observable({(2,): 1.0}, 3), (3, 3), p, X))
+
+
+def test_entanglement_of_formation_two_qubits():
+    """Wootters: E_F = h((1 + sqrt(1 - C^2)) / 2). The SDP bounds the roof of 4 det(rho_A) <= S(rho_A) below."""
+    rho = random_state(4, 3, np.random.default_rng(11))
+    C = concurrence(rho)
+    exact = binary_entropy((1 + np.sqrt(1 - C**2)) / 2)
+    res = roofDecomposition(rho, 4 * ANTISYM_2, (2, 2), 3, 3, target=ENTANGLEMENT_ENTROPY, seed=0)
+    assert res.sdp_value == pytest.approx(C**2, abs=1e-6) and res.sdp_value <= exact
+    assert res.value == pytest.approx(exact, rel=1e-6)
     assert np.allclose(average_state(res.probabilities, res.states), rho)
 
 
