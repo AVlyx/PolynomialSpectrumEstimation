@@ -3,7 +3,7 @@ name = "polynomial-spectrum-estimation"
 version = "0.1.0"
 description = "SDP bounds on convex roofs of entanglement-spectrum polynomials"
 requires-python = ">=3.10"
-dependencies = ["numpy", "scipy", "qics", "schur-weyl>=0.3.0"]
+dependencies = ["numpy", "scipy", "qics", "schur-weyl>=0.3.0", "tensorly"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
