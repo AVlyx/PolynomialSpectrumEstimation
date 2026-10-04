@@ -230,7 +230,7 @@ class _ConvexRoofSDP:
 
         self.dims, self.k, self.e, self.D, self.S, self.E, self.N = dims, k, e, D, S, E, N
         self.real, self.V, self.U, self.param, self.Z = real, V, U, param, Z
-        self.kept_rho, self.rho_funcs = kept_rho, rho_funcs
+        self.marginal, self.kept_rho, self.rho_funcs = marginal, kept_rho, rho_funcs
         self.c, self.A, self.b = Z.T @ c, A, b.reshape(-1, 1)
         self.G, self.h, self.cones = (G @ Z).tocsr(), np.zeros((G.shape[0], 1)), cones
 
@@ -264,6 +264,11 @@ class _ConvexRoofSDP:
         dA, dB = self.dims
         lift = np.kron(SymmetricBasis(self.k, dA * dB).V() @ self.U, np.eye(self.E))
         return lift @ Phi @ lift.conj().T
+
+    def observable_objective(self, observable: np.ndarray) -> np.ndarray:
+        """c with c.z = tr((observable ot I) tr_B Phi) (not negated for ``mode="max"``)."""
+        row = (self.marginal.observable_row(np.asarray(observable)) @ self.param.M).real
+        return self.Z.T @ row.toarray().reshape(-1, 1)
 
     def operator_objective(self, Y: np.ndarray) -> np.ndarray:
         """c with c.z = tr((Y ot 1) Phi) for a Hermitian Y on Sym^k(range rho) (the extra copies traced out)."""

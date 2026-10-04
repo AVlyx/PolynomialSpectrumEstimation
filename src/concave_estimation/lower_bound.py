@@ -91,28 +91,14 @@ def polynomialLowerBound(
         >>> {mu: round(c, 6) for mu, c in g.coefficients.items()}
         {(1, 1): 2.0}
     """
-    if k < 1 or n < 1:
-        raise ValueError("need n >= 1 and k >= 1")
     rng = np.random.default_rng(seed)
-    _check_symmetric(f, n, rng)
-
-    points = np.vstack([_lattice(n, k), _sample(rng, 2000, n)])
-    fvals = _evaluate(f, points)
-    scale = max(np.abs(fvals).max(), 1e-300)
-    threshold = tol * scale
-    nonnegative = bool(fvals.min() >= -threshold)
-
-    zero_face = 0
-    if nonnegative:
-        while zero_face < n and abs(f(_barycenter(zero_face + 1, n))) <= threshold:
-            zero_face += 1
-    mus = [mu for mu in partitions(k, max_height=n) if len(mu) > zero_face]
+    cls = _PolynomialClass(f, n, k, tol, rng)
+    points, fvals, threshold, nonnegative = cls.points, cls.fvals, cls.threshold, cls.nonnegative
+    mus, zero_face, basis, means = cls.mus, cls.zero_face, cls.basis, cls.means
     if not mus:  # f vanishes at the center, so (concave, >= 0) everywhere
         return PolynomialLowerBound({}, n, k, 0.0, 0.0, 0.0, zero_face, 0)
-    basis = _MonomialBasis(mus, n)
-    means = np.array([_uniform_mean(mu, n) for mu in mus])
 
-    violations = [lambda g, fx: g - fx] + [lambda g, fx: -g] * nonnegative
+    violations = cls.violations()
     G = basis(points)
     for iteration in range(1, max_iter + 1):
         c, t = _solve(G, fvals, means, objective, nonnegative)
@@ -144,6 +130,38 @@ def polynomialLowerBound(
         zero_face=zero_face,
         iterations=iteration,
     )
+
+
+class _PolynomialClass:
+    """The symmetric polynomials g = sum_mu c_mu m_mu of degree k in n variables admissible as lower bounds of f.
+
+    ``mus`` are the partitions of k with at most n parts and more than ``zero_face`` parts (so g vanishes where f
+    does), ``points`` and ``fvals`` the initial points of the cutting-plane loop (a lattice and random points) and f
+    there. g >= 0 is required iff f >= 0 (``nonnegative``). With ``restricted=False`` only g <= f is required: no
+    g >= 0 and no exact zeros (all partitions are kept).
+    """
+
+    def __init__(self, f, n, k, tol, rng, lattice_points=2000, random_points=2000, restricted=True):
+        if k < 1 or n < 1:
+            raise ValueError("need n >= 1 and k >= 1")
+        _check_symmetric(f, n, rng)
+        self.f, self.n, self.k = f, n, k
+        self.points = np.vstack([_lattice(n, k, lattice_points), _sample(rng, random_points, n)])
+        self.fvals = _evaluate(f, self.points)
+        self.threshold = tol * max(np.abs(self.fvals).max(), 1e-300)
+        self.nonnegative = restricted and bool(self.fvals.min() >= -self.threshold)
+
+        self.zero_face = 0
+        if self.nonnegative:
+            while self.zero_face < n and abs(f(_barycenter(self.zero_face + 1, n))) <= self.threshold:
+                self.zero_face += 1
+        self.mus = [mu for mu in partitions(k, max_height=n) if len(mu) > self.zero_face]
+        self.basis = _MonomialBasis(self.mus, n)
+        self.means = np.array([_uniform_mean(mu, n) for mu in self.mus])
+
+    def violations(self):
+        """phi(g(x), f(x)) > 0 where a constraint of the class is violated: g <= f, and g >= 0 if f >= 0."""
+        return [lambda g, fx: g - fx] + [lambda g, fx: -g] * self.nonnegative
 
 
 def _solve(G, fvals, means, objective, nonnegative):
