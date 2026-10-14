@@ -1,0 +1,679 @@
+\documentclass[aps,pra,twocolumn,showpacs,superscriptaddress,groupedaddress]{revtex4-2}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsthm, amssymb, amsfonts,enumitem,listings}
+\usepackage[makeroom]{cancel}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{dsfont}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{thm-restate}
+\usepackage{comment}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.18}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots,statistics}
+\usepackage{ytableau}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=black,citecolor=blue]{hyperref}
+\usepackage{orcidlink}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\imm}{Imm}
+\usepackage{physics}
+\DeclareMathOperator{\per}{per}
+\DeclareMathOperator{\Wg}{Wg}
+\DeclareMathOperator{\wg}{wg}
+\DeclareMathOperator{\spec}{spec}
+\DeclareMathOperator{\Haar}{Haar}
+% \DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\SEP}{SEP}
+\DeclareMathOperator{\sep}{sep}
+\DeclareMathOperator{\ent}{ent}
+% \DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\id}{id}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\height}{h}
+\newcommand{\GHZ}{{\rm{GHZ}}}
+% \newcommand{\bra}[1]{\mathinner{\langle #1|}}
+% \newcommand{\ket}[1]{\mathinner{|#1\rangle}}
+% \newcommand{\braket}[2]{\mathinner{\langle #1|#2\rangle}}
+% \newcommand{\dyad}[1]{| #1\rangle \langle #1|}
+\newcommand{\ot}[0]{\otimes}
+\newcommand{\one}[0]{\mathds{1}}
+\renewcommand{\a}{\alpha}
+\renewcommand{\b}{\beta}
+\newcommand{\vv}{\ket{v_1} \ot \dots \ot \ket{v_n}}
+\newcommand{\vvv}{\dyad{v_1} \ot \cdots \ot \dyad{v_n}}
+\newcommand{\pdim}{2^{\lfloor n/2\rfloor}}
+\newcommand{\cdn}{(\C^d)^{\otimes n}}
+\newcommand{\cdm}{(\C^d)^{\otimes m}}
+\newcommand{\instr}[1]{{\color{gray} instr: #1}}
+\newcommand{\albert}[1]{{\color{blue} Albert: #1}}
+\newcommand{\idk}[1]{{\color{red} #1}}
+\definecolor{antongreen}{HTML}{229922}
+\newcommand{\anton}[1]{{\color{antongreen} Anton: #1}}
+\newcommand{\jofre}[1]{{\color{orange} Jofre: #1}}
+\newcommand{\naga}[1]{{\color{red} Naga: #1}}
+\newcommand{\gerard}[1]{{\color{brown} Gerard: #1}}
+\definecolor{claudeorange}{HTML}{D97757}
+\newcommand{\claude}[1]{{\color{claudeorange} Claude: beep boop, #1}}
+\newcommand{\N}{\mathds{N}}
+\newcommand{\R}{\mathds{R}}
+\newcommand{\C}{\mathds{C}}
+\newcommand{\WW}{\mathcal{W}}
+\newcommand*{\bfrac}[2]{\genfrac{\lbrace}{\rbrace}{0pt}{}{#1}{#2}}
+\newcommand{\E}{\mathcal{E}}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\newcommand{\cdk}{(\C^d)^{\otimes k}}
+\newcommand{\cd}{\C^d}
+\newcommand{\cdx}[1]{(\C^d)^{\otimes #1}}
+\newcommand{\I}{\one}
+
+
+\DeclareUnicodeCharacter{202C}{\^{i}}
+\newcommand{\Om}[1]{\small $\omega_{#1}$}
+\newcommand{\De}[1]{$\Delta_{#1}$}
+\newcommand{\Ga}[1]{$\Lambda_{4,#1}$}
+\makeatletter
+\newcommand{\vast}{\bBigg@{4}}
+\newcommand{\Vast}{\bBigg@{5}}
+\makeatother
+\newtheorem{definition}    {Definition}
+\newtheorem{theorem}    {Theorem}
+\newtheorem{cor}    {Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{lemma}      [theorem]{Lemma}
+\newtheorem{example}    [theorem]{Example}
+\usepackage{phfcc}
+\phfMakeCommentingCommand[initials={NT}]{nt}
+
+\usepackage{soul}
+
+\begin{document}
+
+\title{
+Tight estimates of entanglement measures and transformations of mixed states
+%Learning the entanglement spectrum of mixed-state decompositions
+%A complete hierarchy to learn the marginal spectra of mixed-state decompositions
+}
+
+\author{Authors
+%Albert Rico$^1$$^{\orcidlink{0000-0001-8211-499X}}$
+}
+\affiliation{$^1$Naturwissenschaftlich-Technische Fakult\"{a}t, Universit\"{a}t Siegen, Walter-Flex-Stra\ss e 3, 57068 Siegen, Germany}
+
+
+\date{\today}
+\begin{abstract}
+We introduce a method to estimate any polynomial entanglement measure of bipartite mixed states with high accuracy. For this we formulate a semidefinite programming hierarchy of convergent optimizations over entanglement spectra using a natural polynomial basis, which allows us to detect entanglement dimension. We extend the optimization to  non-polynomial measures such as the entanglement of formation with linear programming. Tightness of the bounds is shown by extracting the optimal decomposition into pure states. As a benchmark, we obtain accurate estimates for families of two-qutrit bound entangled states. Moreover, extracting the decomposition allows us to formulate new criteria to determine entanglement transformations. In particular, we provide a complete hierarchy to determine LOCC convertibility from pure to mixed states in any dimension.
+
+\end{abstract}
+
+\maketitle
+\section{Introduction}
+Composite quantum systems are entangled when they are not described solely by their parts~\cite{epr}. In isolated quantum systems, described by pure states, this effect is completely characterized by the spectrum of the marginals~\cite{Nielsen1999MajLOCC}, that is, the populations of the eigenstates of the subsystems. Therefore, learning such spectra is essential to understand the entanglement of the system.
+
+In practice, pure states become mixed due to decoherence with the environment. When this occurs, the spectrum of the marginals alone is not informative of the entanglement between them. This is because a mixed state admits multiple descriptions as probabilistic ensembles, and one needs to account for all such decompositions. This leads to an intractable optimization required to evaluate entanglement measures, even when full tomography is available. \albert{Explain what is the big problem, to estimate any possible polynomial function, that we solve.}
+\claude{a possible problem statement: ``For pure states, every entanglement measure is a function of the entanglement spectrum; for mixed states, the corresponding quantity is its convex roof, a non-convex optimization over all decompositions. Existing methods address specific measures one at a time. Here we ask: can the convex roof of \emph{any} spectral function be bounded, with guaranteed convergence and certified upper bounds?''}\anton{Ask albert}
+
+We build on the work of Ref.~\cite{Toth2015CroofTP}, which relaxes the set of states $\omega_k = \sum_i p_i \dyad{\psi_i}^{\otimes k}$ to obtain SDP lower bounds on the convex roof of the linear entropy, the Schmidt number and the three-tangle. We extend their work in several directions:
+\begin{itemize}
+    \item We bound the convex roof of arbitrary symmetric polynomials of the entanglement spectrum via the Schur basis and isotypic projectors.
+    \item We prove convergence of the hierarchy using the quantum de Finetti theorem.
+    \item We provide symmetry reductions and SDP optimizations.
+    \item We introduce a cheaper hierarchy, which we use to compute bounds in larger systems.
+    \item We embed an LP to bound non-polynomial measures such as the entanglement of formation and Vidal's monotones, and to check LOCC convertibility.
+    \item We show how to extract near-optimal decompositions from the result of the SDP.
+\end{itemize}
+\claude{update the bullets: extraction gives \emph{upper} bounds, so ``near-optimal'' in the last bullet should become ``decompositions that give upper bounds''. The third bullet can now be more concrete: ``We reduce the SDP to the symmetric subspace of the support of $\rho$ and to real variables for real states (Appendix~\ref{app:SymRed})''.}
+
+\section{Entanglement spectrum}
+
+Consider a bipartite pure state $\ket{\psi}_{AB} \in \C^{d_A} \otimes \C^{d_B} \cong \C^D$ with $D = d_Ad_B$. Such a state is separable if it can be written as $\ket{\psi}=\ket{a}\otimes\ket{b}$ and entangled otherwise. More generally, any pure bipartite state admits a \emph{Schmidt decomposition}
+\begin{equation}\label{eq:SchmidtDec}
+    \ket{\psi}_{AB} = \sum_{i=1}^r \sqrt{\a_i}\ket{a_i}\otimes\ket{b_i},
+\end{equation}
+where $\a_1\geq\a_2\geq\dots\geq\a_r>0$ and the sets $\{\ket{a_i}\}_i$ and $\{\ket{b_i}\}_i$ are orthonormal. The spectrum $\a=(\a_1,\dots,\a_{d_A})$ of the reduced density matrix $\rho_A=\tr_B\dyad{\psi}$ (with $\a_i=0$ for $i>r$) is called the {\em entanglement spectrum} of $\ket{\psi}_{AB}$, and the number $r$ of nonzero coefficients is known as the {\em Schmidt rank}, denoted $\mathrm{SR}(\psi)$.
+By Nielsen's theorem~\cite{Nielsen1999MajLOCC}, a bipartite pure state $\ket{\psi}$ with entanglement spectrum $\a(\psi)$ can be converted by LOCC into another bipartite pure state $\ket{\phi}$ with entanglement spectrum $\a(\phi)$ if and only if $E_j(\psi)\geq E_j(\phi)$ for all $j=1,\dots,d_A-1$, where
+\begin{equation}\label{eq:Vidal}
+    E_j(\psi)=1-\sum_{i=1}^{j} \a_i(\psi),
+\end{equation}
+as defined in Ref.~\cite{Vidal_1999}. Therefore, the quantities $E_j(\psi)$ form a complete set of entanglement monotones, and all information about the entanglement of each state is encoded in the entanglement spectrum. Every pure-state entanglement monotone is a concave, unitarily invariant function of $\rho_A$~\cite{Vidal_2000}.
+
+A pure-state entanglement measure $E$ can be extended to mixed states via the convex roof extension,
+\begin{equation}\label{eq:CRoof}
+    E(\rho) = \min_{\mathcal{D}(\rho)} \sum_i p_i E(\psi_i),
+\end{equation}
+where the minimization is taken over all decompositions
+$\mathcal{D}(\rho)=\{p_i,\ket{\psi_i}\}$ of $\rho$ such that $\rho = \sum_i p_i \dyad{\psi_i}$. However, this optimization is generally intractable, even if full tomography is available~\cite{gurvits2003classicaldeterministiccomplexityedmonds}.
+
+\iffalse
+    \begin{table}[]
+        \centering
+        \begin{tabular}{c|ccc}
+             & Pure states & Mixed states  \\
+             \hline
+            with tomography & SVD & This work \\
+            without tomography & WSS & Also this work \\
+        \end{tabular}
+        \caption{Methods to access the average marginal spectrum of a quantum state in different settings.}
+        \label{tab:placeholder}
+    \end{table}
+\fi
+
+
+
+\section{Decomposition of the Hilbert space}
+
+A $k$-qudit quantum state is a vector in the Hilbert space $\cdk$. We consider two groups acting on this space: the \emph{symmetric group} $S_k$ of permutations $\pi\in S_k$ of $k$ elements, acting as
+\begin{align}
+    \pi (\ket{\psi_1} \ot \dots \ot \ket{\psi_k}) &= \ket{\psi_{\pi^{-1}(1)}} \ot \dots \ot \ket{\psi_{\pi^{-1}(k)}},
+\end{align}
+and the \emph{general linear group} $GL_d$ of invertible $d\times d$ matrices $g\in GL_d$, acting as
+\begin{align}
+g(\ket{\psi_1} \ot \dots \ot \ket{\psi_k}) &=g\ket{\psi_1} \ot \dots \ot g\ket{\psi_k}.
+\end{align}
+These two actions commute,
+\begin{equation}\label{eq:PerUniCommute}
+    \pi \, g = g \, \pi.
+\end{equation}
+The so-called \emph{Schur--Weyl duality} states that under the action of these two groups, the Hilbert space $\cdk$ decomposes as
+\begin{equation}
+    \cdk = \bigoplus_{\substack{\lambda\vdash k \\ \ell(\lambda)\leq d}} \mathcal{S}^\lambda_k \ot \mathcal{U}^\lambda_d
+\end{equation}
+into irreducible subspaces $\mathcal{S}^\lambda_k$ and $\mathcal{U}^\lambda_d$, which carry the irreducible representations
+of $S_k$ and $GL_d$ respectively, indexed by partitions $\lambda$. The dimensions of $\mathcal{S}^\lambda_k$ and $\mathcal{U}^\lambda_d$ are denoted as $f^\lambda$ and $s_\lambda(1,\dots,1)$, where $s_\lambda$ is the Schur polynomial. Each partition $\lambda$ is represented as a Young diagram: a non-increasing vector of positive integers summing to $k$, whose length we denote by $\ell(\lambda)$.
+
+To each Young diagram $\lambda$ we can associate a so-called {\em isotypic projector} $\Pi^\lambda$ onto the subspace $\mathcal{S}^\lambda_k \ot \mathcal{U}^\lambda_d$. This projector is given by
+\begin{align}
+    \Pi^\lambda = \frac{f^\lambda}{k!}\sum_{\pi \in S_k} \chi^\lambda(\pi)\, \pi,
+\end{align}
+where $\chi^\lambda(\pi)$ is the character of the cycle type of $\pi$ in the irreducible representation $\lambda$. It follows that the isotypic projectors commute with both permutations and tensor powers of matrices,
+\begin{equation}
+    \pi\,\Pi^\lambda = \Pi^\lambda\,\pi\,,\quad g\,\Pi^\lambda = \Pi^\lambda\,g\,.
+\end{equation}
+
+\section{Polynomial optimization over mixed-state decompositions}
+The spectrum of a reduced state $\rho_A$ can be estimated via weak Schur sampling on $k$ copies of $\rho_A$~\cite{Keyl2001EstimatingSpectrum}: the probability of measuring a Young diagram $\lambda \vdash k$ is given by
+\begin{equation}
+    \tr(\Pi^\lambda \rho_A^{\otimes k}) = f^\lambda s_\lambda(\spec\rho_A).
+\end{equation}
+We know from~\cite{MacdonaldSymmFunc} that the Schur polynomials $s_\lambda$ with $\lambda \vdash k$ form a basis of the homogeneous symmetric polynomials $P$ of degree $k$ of the spectrum of $\rho_A$. Since $\tr(\rho_A) = 1$ implies $\tr(\rho_A)^{l} = 1$, any polynomial of degree $l < k$ can be lifted to a homogeneous polynomial of degree $k$. Thus, any symmetric polynomial of degree at most $k$ of the entanglement spectrum can be expressed as
+\begin{equation}
+    P(\spec\rho_A) = \sum_{\lambda\vdash k}c_\lambda s_\lambda(\spec\rho_A).
+\end{equation}
+
+Therefore, in order to estimate any entanglement measure of bipartite states given by a symmetric polynomial, we are interested in the convex roof of these polynomials,
+\begin{equation}\label{eq:PrhoABcroof}
+    \widehat{P}(\rho_{AB}) = \min_{\mathcal{D}(\rho_{AB})} \sum_i p_i \tr(O_P\, \rho_{A,i}^{\otimes k}),
+\end{equation}
+where $\rho_{A,i}=\tr_B\dyad{\psi_i}$ and
+\begin{equation}\label{eq:OP}
+    O_P = \sum_{\lambda \vdash k} \frac{c_\lambda}{f^\lambda} \Pi^\lambda
+\end{equation}
+for any tuple of coefficients $\vec{c}:=(c_{\lambda_1},\dots,c_{\lambda_t})$, where $t$ is the number of partitions of $k$. $\widehat{P}$ is an entanglement monotone only when $P$ is concave~\cite{Vidal_2000}. For any $P$, we always have unitary invariance since $P$ only depends on the spectrum.
+
+\section{Complete hierarchy for lower bounds}
+Given a bipartite mixed state $\rho_{AB}$ acting on $\C^{d_A} \otimes \C^{d_B}$, to any decomposition in $\mathcal{D}(\rho_{AB})$ we associate the state~\cite{Toth2015CroofTP}
+\begin{equation}\label{eq:omega}
+    \omega_k = \sum_i p_i \dyad{\psi_i}^{\otimes k}
+\end{equation}
+acting on $(\C^{d_A} \otimes \C^{d_B})^{\otimes k}$.
+%Then, for an observable $O_m$ acting on $m$ copies of a pure state, its convex roof can be written as
+%\begin{equation}
+%    \min_{\mathcal{D}(\rho)} \tr(O_m \otimes \I_{k-m} \,\omega_k)
+%\end{equation}
+%for any $k \geq m$.
+%Since the set of states $\omega_k$ is intractable. We compute this convex roof via the following SDP relaxation.
+This allows us to lower bound Eq.~\eqref{eq:PrhoABcroof} as $\widehat{P}(\rho)\geq P_{{\rm LB}_k}(\rho)$ with the following semidefinite programming (SDP) relaxation,
+\begin{align}
+    P_{{\rm LB}_k}(\rho)=\min_{\Omega_k} \ &\tr\!\left(O_P^A \otimes \I^B \, \Omega_k\right)\label{eq:SDPcroof1}\\
+    \text{s.t. } & \Omega_k \succeq 0, \nonumber\\
+    & \Pi_\text{sym}^{AB,k} \, \Omega_k = \Omega_k\,\Pi_\text{sym}^{AB,k}  = \Omega_k,\nonumber\\
+    & \tr_{2,\dots,k} (\Omega_k) = \rho, \nonumber\\
+    & \Omega_k^{T_S} \succeq 0 \quad  \forall \, S = \{1, \dots, l\}.\nonumber
+\end{align}
+Here, $O_P^A$ acts on $A_1,\dots,A_k$. When $\deg(P) = m < k$, $P$ can be lifted to degree $k$, or, equivalently evaluated on $A_1,\dots,A_m$ as both give the same bound (Lemma~\ref{lem:lifting}). $\Pi_\text{sym}^{AB,k}$ is the projector onto the $k$-copy symmetric subspace of $(\C^{d_A}\otimes\C^{d_B})^{\otimes k}$ across copies, $l$ ranges within $1 \leq l \leq \lfloor k/2 \rfloor$, and $T_S$ denotes the partial transpose on the copies in $S$. Since every $\omega_k$ is in the feasible set of this SDP at every level $k$, it gives a lower bound on the convex roof. This yields an SDP hierarchy of $k$-th order lower bounds. This hierarchy is complete, as shown in Appendix~\ref{app:ProofCongNonExtHier}.
+\begin{theorem}\label{thm:ConvergenceSDPcroof}
+The bound of Eq.~\eqref{eq:SDPcroof1} is saturated asymptotically, $\lim_{k\rightarrow\infty} P_{{\rm LB}_k}(\rho) = \widehat{P}(\rho)$.
+\end{theorem}
+The proof sketch is as follows: by the de Finetti theorem for Bose-symmetric states~\cite{caves2002unknown}, the $m$-copy marginal of any feasible $\Omega_k$ is asymptotically close to a mixture $\sum p_i \dyad{\phi_i}^{\otimes m}$ whose first system marginal is asymptotically close to $\rho$ as $k$ increases. By continuity of the convex roof, $P_{{\rm LB}_k} \geq \widehat{P}(\rho) - \delta_k$ where $\lim_{k\to \infty}\delta_k=0$.
+
+Since $\Omega_k$ is supported on the symmetric subspace $\text{Sym}^k(\C^{d_A}\otimes\C^{d_B})\subset(\C^{d_A}\otimes\C^{d_B})^{\otimes k}$, we can exploit this symmetry to reduce the matrix size of $\Omega_k$ from $D^{k}$ to $\dim \text{Sym}^k(\C^{d_A}\otimes\C^{d_B}) = \binom{k+D-1}{k}$. By projecting onto the range of $\rho$, we can further reduce this size to $\binom{k+r-1}{k}$. Moreover, the variable $\Omega_k$ can be taken real for real states. These symmetry reductions are shown in Appendix~\ref{app:SymRed}.
+
+Naturally, using the isotypic polynomial basis allows us to detect the entanglement dimension of a target mixed state. To see this, recall that $\Pi^\lambda\ket{e_1}\otimes...\otimes\ket{e_k}=0$ if the number of excitations of $\ket{e_1}\otimes...\otimes\ket{e_k}$ (in any orthonormal basis $\{\ket{e_i}\}$ is smaller than $\ell(\lambda)$, and therefore $\tr(\Pi^\lambda_A\otimes\one_B \dyad{\psi}_{AB}^{\otimes k}) = 0$ if and only if $\ell(\lambda) > \operatorname{SR}(\psi_{AB})$ \cite{Christandl_2005,lovitz2026TreeTNtest}.
+Therefore, if $P_{{\rm LB}_k}\neq 0$ up to the solver precision, then no pure-state decomposition of $\rho$ exists where all states have Schmidt rank $\ell(\lambda)$ or lower. This is formally described as follows:
+\begin{observation}
+   If $P_{{\rm LB}_k}\neq 0$ is certified with numerical precision with $O_P=\Pi^\lambda$, then $\rho$ has Schmidt number at least $\ell(\lambda)+1$.
+\end{observation}
+
+\section{Simplified relaxation}
+
+Notice that the isotypic projectors $\Pi^\lambda$ only act on Alice's marginals. Therefore, it is inefficient to encode Bob's part of the state into the variable $\Omega_k$. Here we present a simplification of the hierarchy above using a smaller variable that allows us to access larger systems, at the cost of weaker bounds at each level $P_{{\rm LB}_{k,m}} \leq P_{{\rm LB}_m}$ with $P_{{\rm LB}_{k,m}}$ defined in Eq.~\eqref{eq:marginals_SDP}. For $m > k$, define the following extension acting on $(\C^{d_A})^{\otimes m}\otimes(\C^{d_B})^{\otimes k}$ (i.e., $m$ copies of $A$ and $k$ copies of $B$),
+\begin{equation}
+    \omega_{k,m} := \sum_i p_i \dyad{\psi_i}^{\otimes k}\otimes \rho_{A,i}^{\otimes (m-k)},
+\end{equation}
+which satisfies $\tr_{A_{k+1}, \dots, A_m}(\omega_{k,m})=\omega_k$. We relax this operator with a positive semidefinite variable $\Phi_{k,m}$, and denote $\Phi_{k}:=\tr_{A_{k+1}, \dots, A_m}(\Phi_{k,m})$.
+Then we can lower bound $\widehat{P}(\rho)$ as $P_{{\rm LB}_{k,m}}\leq \widehat{P}(\rho)$, where
+\begin{align}\label{eq:marginals_SDP}
+    P_{{\rm LB}_{k,m}}:=&\min_{\Phi_{k,m}} \tr(O_P^A \otimes \I^B \ \Phi_{k,m})\\
+    \text{s.t. } & \Phi_{k,m}\succeq 0, \nonumber\\
+    & \Pi_\text{sym}^{AB,k} \, \Phi_{k}\, \Pi_\text{sym}^{AB,k}= \Phi_{k},\nonumber\\
+    & \tr_{A_2,\dots,A_m,B_2,\dots,B_k} (\Phi_{k,m}) = \rho_{AB}, \nonumber\\
+    & \tr_{B_1,\dots,B_k}(\Phi_{k,m}) \text{ is permutation invariant},\nonumber\\
+    & \Phi_{k,m}^{T_S} \succeq 0 \quad  \forall \, S.\nonumber
+\end{align}
+Here $O_P^A$ is the observable of Eq.~\eqref{eq:OP} for a polynomial of degree $m$, acting on $A_1,\dots,A_m$. Since $\Phi_{k,m}$ can be assumed invariant under permutations of $AB_1, \dots AB_k$ and $A_{k+1}, \dots, A_m$, it suffices to impose partial transpose conditions on the tuples $(i, j)$ where each tuple means take the partial transpose on the first $i$ full-copy registers and the first $j$ marginal registers. One such set of representatives is $\{(i,j):0\leq i\leq k,\ 0\leq j<\tfrac{m-k}{2}\}\ \cup\ \{(i,\tfrac{m-k}{2}):0\leq i\leq\lfloor k/2\rfloor\}$ where the second set is only present for even $m-k$ and the tuple $(0,0)$ is excluded.
+
+\input{figures/tab_dimensions}
+
+\section{Approximating the optimal decomposition}\label{sec:extractingTheDecomposition}
+Our next goal is to extract the decomposition $\{p_i, \ket{\psi_i}\}$ from the optimal solution $\Omega_k$ found in the SDP. This will provide us control of how tight our estimates are. Notice that if the relaxation is tight, we have $\Omega_k = \omega_k$. This is in general not the case, and therefore we write $\Omega_k = \omega_k + \Delta$, where $\Delta$ accounts for the gap of the relaxation and solver noise.
+For $k \geq 3$, this decomposition is unique up to phases when the operators $\dyad{\psi_i}$ are linearly independent~\cite{Kruskal1977}. When the relaxation is tight and $\Omega_k = \omega_k$, we can then retrieve it exactly with Jennrich's algorithm~\cite{Harshman1970,Leurgans1993}. Since $\Omega_k$ is in general not of this form, we instead use the PARAFAC (or CANDECOMP) algorithm~\cite{Harshman1970,CarrollChang1970} from the TensorLy package~\cite{tensorly} to find a decomposition $\{p_j, \ket{\psi_j}\}$ that locally minimizes
+\begin{equation}
+    \Big\|\Omega_k - \sum_j p_j \dyad{\psi_j}^{\otimes k}\Big\|_F.
+\end{equation}
+Details are given in Appendix~\ref{app:tensor}.
+This is a decomposition of the state $\sigma = \sum_j p_j \dyad{\psi_j}$, which is close to but generally different from $\rho$. We turn it into an exact decomposition of $\rho$ by defining
+\begin{equation}
+    \ket{\varphi_j} = \rho^{1/2}\sigma^{-1/2}\sqrt{p_j}\ket{\psi_j},
+\end{equation}
+where $\sigma^{-1/2}$ is taken on the support of $\sigma$. If $\operatorname{supp} \rho \subseteq \operatorname{supp} \sigma$, then $\sum_j \dyad{\varphi_j} = \rho^{1/2}\Pi_\sigma\rho^{1/2} = \rho$, with $\Pi_\sigma$ the projector onto the support of $\sigma$. Hence $\{q_j,\ket{\phi_j}\}$ with $q_j = \|\varphi_j\|^2$ and $\ket{\phi_j}=\ket{\varphi_j}/\|\varphi_j\|$ is a decomposition of $\rho$ and gives a valid upper bound on the convex roof.
+
+In practice, we found that gradient descent over ensemble decompositions, parametrized via the HJW theorem~\cite{HJW}, usually performs better when it comes to extracting the upper bound. However, the tensor extraction method remains useful in cases where an upper bound cannot be extracted otherwise, such as the LOCC convertibility problem we define later.
+
+\input{figures/fig_named_linear_entropy}
+\input{figures/fig_linear_entropy}
+\input{figures/fig_upper_bounds}
+
+\section{Non-polynomial measures via Linear Programming}
+Non-polynomial measures can also be approximated by polynomials.
+In theory, non-polynomial functions can be bounded arbitrarily well by infinite series of polynomials. In practice, the SDP cannot run at large values of $m$, but even at fixed $m$, we can optimize over symmetric polynomials to get strong bounds on the convex roof of non-polynomial measures. Finding the best polynomial that lower bounds another function is a problem that can be cast as a linear program (LP). This allows us to dynamically find the best lower-bounding polynomial for a given state while running the SDP,
+\begin{equation}
+    F_{{\rm LB}_{k,m}} = \max_{\substack{P \leq F \\ \deg P = m}} \, \min_{\Phi_{k,m}} \, \tr(O_P^A \ot \I^B \ \Phi_{k,m}).
+\end{equation}
+
+To build the LP, we pick multiple spectra $\a=(\a_1, \dots, \a_{d_A})$ at which we compute all the Schur polynomials $s_\lambda(\a)$ of degree $m$ and the input function $F(\a)$. We then require $F(\a) \geq \sum_\lambda c_\lambda s_\lambda(\a)$ at every point. By symmetry of the Schur polynomials, we only need to compute the points where $\a_i \geq \a_j$ for $i < j$. This grid procedure tolerates a small error $\epsilon$, where the polynomial might be larger than the given function between grid points. Since the SDP gives the polynomial as output, we can compute this error numerically and subtract it from the output to obtain a lower bound. In practice, to obtain a single minimization problem, we replace the LP by its dual. This can be formulated as follows:
+\begin{theorem}\label{thm:non-polyHier}
+    For any concave function $F$ whose optimal value over convex-roofs is $\widehat{F}(\rho)$, all hierarchy levels $k$ satisfy $F_{{\rm LB}_{k,m}}(\rho)\leq \widehat{F}(\rho)$. Moreover, the bound  is saturated asymptotically, $\lim_{k\rightarrow\infty} F_{{\rm LB}_k}(\rho) = \widehat{F}(\rho)$.
+\end{theorem}
+This applies in particular to any entanglement measure $\widehat{F}(\rho)=E(\rho)$, even for non-polynomial measures such as the entanglement of formation.
+
+\input{figures/fig_polynomials}
+\input{figures/fig_named_nonpolynomial}
+
+\section{LOCC convertibility}
+The convex roofs $\widehat E_j$ of the Vidal monotones~\eqref{eq:Vidal} are entanglement monotones for mixed states~\cite{Vidal_2000}: if $\rho$ can be converted into $\sigma$ by LOCC, then $\widehat E_j(\rho)\geq\widehat E_j(\sigma)$ for all $j$. Combined with the bounds of the previous sections, this yields tests of LOCC convertibility, which depend on whether the initial and target states are pure or mixed.
+
+By Ref.~\cite{Jonathan_1999}, a pure state $\ket{\psi}$ can be converted into an ensemble $\{p_i, \ket{\psi_i}\}$ by LOCC if and only if
+\begin{equation}\label{eq:JPcriterion}
+    E_j(\psi) \geq \sum_i p_i E_j(\psi_i)\qquad \text{for all } j=1,\dots,d_A-1.
+\end{equation}
+Hence $\ket{\psi}$ can be converted into a mixed state $\rho$ if and only if some decomposition of $\rho$ satisfies all these inequalities simultaneously.
+
+We therefore combine the LPs for all the $E_j$ into a single SDP, whose optimal value $s_{k,m}$ is the largest violation of Eq.~\eqref{eq:JPcriterion} over the relaxed set of decompositions into a single LP. Taking the dual of this LP, we turn this problem into a feasibility . If $s_{k,m}$ exceeds a grid correction computed for the polynomials returned by the solver, for some $(k,m)$ including $k=1$, then $\ket{\psi}$ cannot be converted into $\rho$. If $s_{k,m}\leq0$ and $k\geq3$, we extract a decomposition as in Sec.~\ref{sec:extractingTheDecomposition} and verify Eq.~\eqref{eq:JPcriterion} as a consequence of Theorem~\ref{thm:non-polyHier}. To address LOCC convertibility, we formulate the following SDP:
+\begin{align}
+    Write\,here\,the\,sdp \label{eq:SDPlocc}
+\end{align}
+\begin{theorem}
+    If Eq.~\eqref{eq:SDPlocc} holds, then $\ket{\psi}$ can be converted into $\rho$ with LOCC.
+\end{theorem}
+Otherwise, the test is inconclusive. The construction and the proofs are given in Appendix~\ref{app:LOCC}.
+
+\input{figures/fig_locc}
+
+
+\iffalse
+\section{Experiment friendly version}
+In the constraints of our SDP we might not want to optimize over a state $\rho$ but might want to optimize over all states that satisfy some constraints. This would be the case in an experiment where full tomography is expensive to compute but we might have access to some measurements and statistics about the underlying state. This is of course possible to implement as a constraint in the SDP and instead of the constraint $\tr_{\neq 1}(\Omega_k) = \rho$, we would ask that $\tr_{\neq 1}(\Omega_k)$ satisfies the given constraints.
+
+\anton{Give more details on the proof? It is not short, appendix?}
+\fi
+
+\section{end}
+\claude{rename to ``Conclusion'' and write 1--2 paragraphs: summary, limitations (scaling in $D$ and $k$, grid error), outlook (completeness in $m$ for concave measures, multipartite spectra, and the experiment-friendly version above).}
+{\em Acknowledgements.}
+AR acknowledges support
+by the Deutsche Forschungsgemeinschaft, DFG, German Research Foundation, project number 563437167 and Project BeRyQC, Grant No.
+13N17292.
+
+
+
+\newpage
+\bigskip
+
+
+
+\addcontentsline{toc}{subsection}{Bibliography}
+\bibliographystyle{ieeetr}
+\bibliography{Bibliography}{}
+
+\begin{widetext}
+
+
+
+\appendix
+
+
+
+\section{Proof of Theorem~\ref{thm:ConvergenceSDPcroof}}\label{app:ProofCongNonExtHier}
+We consider a polynomial $P$ of degree $m$. At level $k \geq m$ of the hierarchy, we obtain the optimal solution $\Omega_k$, with $P_{{\rm LB}_k}(\rho) = \tr(O_P\, \Omega_m)$ where $\Omega_m = \tr_{m+1,\dots, k}(\Omega_k)$ is the $m$-copy marginal of $\Omega_k$.
+By the de Finetti theorem for Bose-symmetric states~\cite[Thm.~II.8]{Christandl_2007}, for every feasible $\Omega_k$, there is an $\omega_m = \int \dyad{\phi}^{\otimes m} d\mu(\phi)$ such that
+\begin{equation}
+    \left\|\Omega_m - \omega_m\right\|_1 \leq \epsilon
+\end{equation}
+with $\epsilon = \tfrac{4 D m}{k}$. By Carath\'eodory's theorem, since the space is finite-dimensional, we can write $\omega_m = \sum_i p_i \dyad{\phi_i}^{\otimes m}$. Here, $\omega_m$ is associated to a decomposition $\{p_i, \ket{\phi_i}\}_i$ corresponding to a state $\sigma$ and $\tr(O_P \,\omega_m) \geq \widehat{P}(\sigma)$. Since the partial trace is contractive, $\left\|\rho - \sigma\right\|_1 = \left\|\tr_{2,\dots, m}(\Omega_m - \omega_m)\right\|_1 \leq \epsilon$.
+
+Then, by H\"{o}lder inequality \eqref{eq:HolderStep}, by definition of the convex roof \eqref{eq:croofstep} and from the continuity of the convex roof of a continuous function in finite dimensions \eqref{eq:contConv}~\cite{LOOkupCitations}\anton{ill do the citations at the end}.
+\begin{align}
+    \tr(O_P \Omega_m) &\geq \tr(O_P\omega_m) - \epsilon\|O_P\|_\infty \label{eq:HolderStep}\\
+    &\geq \widehat{P}(\sigma) - \epsilon\|O_P\|_\infty \label{eq:croofstep}\\
+    &\geq \widehat{P}(\rho) - \delta(\epsilon) - \epsilon\|O_P\|_\infty \label{eq:contConv}
+\end{align}
+with $\delta(\epsilon) \to 0$.
+
+Hence, $\widehat{P}{(\rho)} \geq P_{{\rm LB}_k}(\rho) \geq \widehat{P}{(\rho)} -\delta(\epsilon) - \epsilon\|O_P\|_\infty$, $P_{{\rm LB}_k}(\rho) \to \widehat{P}(\rho)$ as $k \to \infty$.
+
+\begin{lemma}\label{lem:lifting}
+    Let $P$ be a homogeneous symmetric polynomial of degree $m$ with $m < k$. Let $P_k$ be its lift to degree $k$ such that $P_k(\a) = P(\a) \left(\sum_i \a_i \right)^{k-m} = P(\a)$ where $\a$ is the spectrum of a state $\rho_A$.
+    Then, for every $\Omega_k$ acting on $(\C^{d_A} \otimes \C^{d_B})^{\otimes k}$, which is permutation invariant across all $k$ copies of $\C^{d_A} \otimes \C^{d_B}$,
+    \begin{equation}
+        \tr(O_P^{A_1,\dots, A_m} \otimes \I^{A_{m+1}, \dots, A_k} \otimes \I^{B} \Omega_k) = \tr(O_{P_k}^A \otimes \I^B \Omega_k).
+    \end{equation}
+\end{lemma}
+\begin{proof}
+    Let $\mathcal{T} = \frac{1}{k!}\sum_{\pi \in S_k} \pi \ O_P \otimes \I^{\otimes (k-m)} \ \pi^\dagger$ be the twirl of $O_P \otimes \I^{\otimes (k-m)}$ over $S_k$. Obviously $\mathcal{T}$ commutes with every permutation in $S_k$, and, since it is a linear combination of permutations, we can write it as a sum of isotypic projectors $\mathcal{T} = \sum_{\lambda \vdash k} a_\lambda \Pi^\lambda$ for some coefficients $a_\lambda$.
+
+    For any $\rho_A$ with spectrum $\a$, since $\rho_A^{\otimes k}$ is permutation invariant,
+    \begin{equation}
+        \tr(\mathcal{T}\rho_A^{\otimes k}) = \tr(\frac{1}{k!} \sum_{\pi \in S_k} \pi O_P \otimes \I \pi^\dagger \rho_A^{\otimes k})= \tr(O_P \otimes \I \rho_A^{\otimes k}).
+    \end{equation}
+    Thus $\mathcal{T}$ and $O_{P_k}$ have the same expectation value $P_k(\a)$ on every $\rho_A^{\otimes k}$, and since both are combinations of isotypic projectors and the Schur polynomials are linearly independent, $\mathcal{T} = O_{P_k}$.
+    Finally,
+    \begin{align}
+        &\tr(O_P^{A_1,\dots, A_m} \otimes \I^{A_{m+1}, \dots, A_k} \otimes \I^{B} \Omega_k)\\
+        =& \tr( \frac{1}{k!}\sum_{\pi \in S_k} O_P^{A_1,\dots, A_m} \otimes \I^{A_{m+1}, \dots, A_k} \otimes \I^{B} \pi^\dagger \Omega_k \pi)\\
+        =& \tr( \frac{1}{k!}\sum_{\pi \in S_k}  \pi O_P^{A_1,\dots, A_m} \otimes \I^{A_{m+1}, \dots, A_k} \otimes \I^{B} \pi^\dagger \Omega_k)\\
+        =& \tr( O_{P_k} \otimes \I^{B} \Omega_k)
+    \end{align}
+\end{proof}
+
+\subsection{Monotonicity in the level}\label{app:monotonicity}
+In the full SDP, at level $k+1$, we obtain the optimal solution $\Omega_{k+1}$. Let $O_k$ be the observable at level $k$ and $O_{k+1}$ be its lift to level $k+1$. Then, $P_{\text{LB}_{k+1}} = \tr(O_{k+1} \Omega_{k+1})=\tr(O_k \otimes \I \ \Omega_{k+1})$ according to Lemma~\ref{lem:lifting}. At level $k$, $\tr_{A_{k+1}B_{k+1}}(\Omega_{k+1})$ is also in the feasible set -- PPT across copies, permutation invariant, first marginal equal to $\rho$ and PSD -- with $\tr(O_k \tr_{A_{k+1}B_{k+1}}(\Omega_{k+1})) = P_{\text{LB}_{k+1}}$. Then, $P_{{\rm LB}_{k+1}} \geq P_{{\rm LB}_{k}}$.
+We can use the same argument in $k$ and $m$ for the simplified SDP.
+
+
+\section{Completeness of the simplified relaxation}\label{app:simplified}
+\emph{Completeness in $m$.} For concave $P$, one can moreover show that the simplified hierarchy converges as $m\to\infty$ already at $k=1$, using a de Finetti argument relative to the system $A_1B_1$. We leave the details of this statement to future work.
+\claude{the word ``moreover'' presupposes a previous statement; with the sandwich commented out, either write ``The simplified hierarchy is complete in $k$, since the marginal $\Phi_k$ of any feasible $\Phi_{k,m}$ is feasible for Eq.~\eqref{eq:SDPcroof1} at level $k$, so that $P_{{\rm LB}_k}\leq P_{{\rm LB}_{k,m}}$. For concave $P$, one can moreover show \dots'', or drop ``moreover''.}
+
+\claude{re Anton (``Why do we need to prove this?'', on the symmetry and PPT-tuple statements): you don't need a formal proof, but the main text asserts that the listed tuples suffice, so a reader should see why in one or two sentences. Suggested text: ``All constraints and the objective of Eq.~\eqref{eq:marginals_SDP} are invariant under permutations of $A_{k+1},\dots,A_m$ and joint permutations of $A_1B_1,\dots,A_kB_k$, so twirling an optimal solution over these permutations yields an optimal solution with the same symmetries. For such solutions, $\Phi_{k,m}^{T_S}$ depends only on the numbers $(i,j)$ of full-copy and marginal registers in $S$, and since $\Phi^{T_{S^c}}=(\Phi^{T_S})^T$, the tuples $(i,j)$ and $(k-i,m-k-j)$ give equivalent constraints.'' This could even go directly into the main text after the set of representatives.}
+
+\iffalse
+    \section{Completeness of the simplified relaxation (proofs, commented out)}
+    Throughout this appendix, $P$ is a homogeneous symmetric polynomial of degree $n$ (lower-degree parts are lifted as in Lemma~\ref{lem:lifting}), and we write $P(\tau)$ for $P(\spec\tau)$ when $\tau$ is a state on $\C^{d_A}$. The objective of Eq.~\eqref{eq:marginals_SDP} only depends on $\tr_{B}(\Phi_{k,m})$, which is invariant under permutations of $A_1,\dots,A_m$. By the last step of the proof of Lemma~\ref{lem:lifting}, it can therefore be evaluated as $\tr(O_P^{A_{i_1}\dots A_{i_n}}\,\Phi_{k,m})$ on any $n$ distinct copies $A_{i_1},\dots,A_{i_n}$, and it takes the same value on all marginals of $\Phi_{k,m}$ that contain these copies.
+
+    \begin{proposition}\label{prop:sandwich}
+    For $\deg P\leq k\leq m$,
+    \begin{equation}
+        P_{{\rm LB}_k}(\rho)\ \leq\ P_{{\rm LB}_{k,m}}(\rho)\ \leq\ P_{{\rm LB}_m}(\rho)\ \leq\ \widehat P(\rho).
+    \end{equation}
+    In particular, the simplified hierarchy is complete in $k$ for every symmetric polynomial $P$.
+    \end{proposition}
+
+    \begin{proof}
+    \emph{First inequality.} Let $\Phi_{k,m}$ be feasible for Eq.~\eqref{eq:marginals_SDP}. Then $\Phi_k=\tr_{A_{k+1},\dots,A_m}(\Phi_{k,m})$ is positive semidefinite, supported on the symmetric subspace of $(\C^{d_A}\otimes\C^{d_B})^{\otimes k}$, and has marginal $\rho$. For $S\subseteq\{1,\dots,k\}$, $\Phi_k^{T_S}=\tr_{A_{k+1},\dots,A_m}(\Phi_{k,m}^{T_S})\succeq0$. Hence $\Phi_k$ is feasible for Eq.~\eqref{eq:SDPcroof1} at level $k$, and since $n\leq k$ both objectives coincide.
+
+    \emph{Second inequality.} Let $\Omega_m$ be feasible for Eq.~\eqref{eq:SDPcroof1} at level $m$, and let $\Phi_{k,m}=\tr_{B_{k+1},\dots,B_m}(\Omega_m)$. Then $\Phi_{k,m}\succeq0$, its marginal is $\rho$, its first $k$ copies are Bose-symmetric, and $\tr_B(\Phi_{k,m})$ is permutation invariant because $\Omega_m$ is. For any $S$, transposing $A_jB_j$ and then tracing out $B_j$ equals transposing $A_j$ after tracing out $B_j$, so $\Phi_{k,m}^{T_S}\succeq0$ follows from the PPT constraints on $\Omega_m$, which by permutation symmetry hold for every subset of copies. The objectives coincide.
+
+    \emph{Third inequality.} For every decomposition of $\rho$, $\omega_m$ is feasible.
+
+    Completeness in $k$ then follows from Theorem~\ref{thm:ConvergenceSDPcroof}, since $m\geq k$.
+    \end{proof}
+
+    \begin{proposition}\label{prop:concave}
+    Let $P$ be concave as a function of the state, i.e., $\tau\mapsto P(\tau)$ is concave on the states of $\C^{d_A}$. Then for every $k\geq1$,
+    \begin{equation}
+        \lim_{m\to\infty}P_{{\rm LB}_{k,m}}(\rho)=\widehat P(\rho).
+    \end{equation}
+    \end{proposition}
+
+    \begin{proof}
+    \emph{Reduction to $k=1$.} If $\Phi_{k,m}$ is feasible, then $\tr_{B_2,\dots,B_k}(\Phi_{k,m})$ is feasible for $k=1$ (by the same partial-transpose argument as in Proposition~\ref{prop:sandwich}) with the same objective value. Hence $P_{{\rm LB}_{1,m}}\leq P_{{\rm LB}_{k,m}}\leq\widehat P$, and it suffices to prove the claim for $k=1$. We write $R=A_1B_1$ and $v_m=P_{{\rm LB}_{1,m}}(\rho)$.
+
+    \emph{Step 1: monotonicity and symmetric optimizers.} Tracing out $A_{m+1}$ maps feasible points at $m+1$ to feasible points at $m$ with the same objective, so $v_m\leq v_{m+1}\leq\widehat P(\rho)$ and the limit $v_\infty=\lim_m v_m$ exists. The objective and all constraints are invariant under permutations of $A_2,\dots,A_m$; by convexity we can therefore choose optimal solutions $\Phi_m$ that are invariant under these permutations.
+
+    \emph{Step 2: limit object.} For each $N$, let $\Phi_m^{(N)}$ be the marginal of $\Phi_m$ on $R\,A_2\cdots A_N$. By compactness and a diagonal argument, there is a subsequence along which $\Phi_m^{(N)}\to\Psi_N$ for every $N$. The limits are positive semidefinite and consistent ($\tr_{A_N}\Psi_N=\Psi_{N-1}$), they satisfy $\tr_{A_2,\dots,A_N}\Psi_N=\rho$, they are invariant under permutations of $A_2,\dots,A_N$, and $\tr_B\Psi_N$ is invariant under permutations of $A_1,\dots,A_N$, since all these conditions are closed. Moreover, evaluating the objective on the copies $A_2,\dots,A_{n+1}$,
+    \begin{equation}\label{eq:simplifiedLimitValue}
+        v_\infty=\tr\!\big((\I_R\otimes O_P)\,\Psi_{n+1}\big).
+    \end{equation}
+
+    \emph{Step 3: de Finetti representation with a side system.} By the quantum de Finetti theorem~\cite{Stormer1969,HudsonMoody1976}, every consistent family of permutation-invariant states $\{\xi_N\}$ on $(\C^{d_A})^{\otimes N}$ is of the form $\xi_N=\int\tau^{\otimes N}d\nu(\tau)$ for a unique probability measure $\nu$ on the states of $\C^{d_A}$. For $Y\succeq0$ on $R$, the family $\tr_R\big((Y\otimes\I)\Psi_N\big)$ is consistent, permutation invariant and positive with total trace $\tr(Y\rho)$. Hence it equals $\int\tau^{\otimes(N-1)}d\nu_Y(\tau)$ for a unique positive measure $\nu_Y$ of mass $\tr(Y\rho)$. By uniqueness, $Y\mapsto\nu_Y$ is linear and positive, so there is a positive-operator-valued measure $M$ on $R$ with $\tr(YM(E))=\nu_Y(E)$ for every Borel set $E$, and $M(\text{all states})=\rho$. Let $\nu=\tr M$, a probability measure. Since $M(E)=0$ whenever $\nu(E)=0$, the Radon--Nikodym theorem gives states $\sigma(\tau)$ on $R$, defined $\nu$-almost everywhere, with $dM=\sigma\,d\nu$. Thus
+    \begin{equation}
+        \Psi_N=\int\sigma(\tau)\otimes\tau^{\otimes(N-1)}\,d\nu(\tau),
+        \qquad
+        \rho=\int\sigma(\tau)\,d\nu(\tau).
+    \end{equation}
+
+    \emph{Step 4: the marginals of $\sigma(\tau)$.} The family $\tr_B\Psi_N$ on $A_1\cdots A_N$ is consistent and permutation invariant, so $\tr_B\Psi_N=\int\tau^{\otimes N}d\nu'(\tau)$ for a unique $\nu'$. Tracing out $A_1$ and comparing with Step~3 gives $\int\tau^{\otimes(N-1)}d\nu'=\int\tau^{\otimes(N-1)}d\nu$ for all $N$, hence $\nu'=\nu$. Now let $Z$ act on $A_1$ and $Y$ on $A_2\cdots A_N$. Computing $\tr\big((Z\otimes Y)\tr_B\Psi_N\big)$ with both representations gives
+    \begin{equation}
+        \int\tr\!\big(Z\,\tr_B\sigma(\tau)\big)\,g_Y(\tau)\,d\nu(\tau)=\int\tr(Z\tau)\,g_Y(\tau)\,d\nu(\tau),
+        \qquad g_Y(\tau)=\tr\!\big(Y\tau^{\otimes(N-1)}\big).
+    \end{equation}
+    The functions $g_Y$, for all $N$ and $Y$, contain the constants, separate points and are closed under products, since $g_{Y_1}g_{Y_2}=g_{Y_1\otimes Y_2}$. By the Stone--Weierstrass theorem they are dense in the continuous functions on the state space. Hence $\tr_B\sigma(\tau)=\tau$ for $\nu$-almost every $\tau$. In other words, $\{\nu,\sigma(\tau)\}$ is a decomposition of $\rho$ into mixed states whose reduced states on $A$ are exactly the states $\tau$ appearing in the de Finetti representation.
+
+    \emph{Step 5: concavity.} Inserting Step~3 into Eq.~\eqref{eq:simplifiedLimitValue},
+    \begin{equation}
+        v_\infty=\int\tr\!\big(O_P\,\tau^{\otimes n}\big)\,d\nu(\tau)=\int P\big(\tr_B\sigma(\tau)\big)\,d\nu(\tau).
+    \end{equation}
+    For any state $\sigma$ on $AB$ with pure-state decomposition $\sigma=\sum_l p_l\dyad{\psi_l}$, concavity gives $P(\tr_B\sigma)\geq\sum_lp_lP(\tr_B\dyad{\psi_l})\geq\widehat P(\sigma)$. Since $\widehat P$ is convex and continuous~\cite{Uhlmann2010Roofs}, Jensen's inequality yields
+    \begin{equation}
+        v_\infty\ \geq\ \int\widehat P\big(\sigma(\tau)\big)\,d\nu(\tau)\ \geq\ \widehat P\Big(\int\sigma(\tau)\,d\nu(\tau)\Big)=\widehat P(\rho).
+    \end{equation}
+    Together with $v_\infty\leq\widehat P(\rho)$, this proves the claim.
+    \end{proof}
+
+    \begin{cor}\label{cor:concaveTarget}
+    Let $F$ be a continuous function of the state that is concave on the states of $\C^{d_A}$, and let $P$ be a polynomial with $F-\eta\leq P\leq F$ on the simplex. Then $\lim_{m\to\infty}P_{{\rm LB}_{k,m}}(\rho)\geq\widehat F(\rho)-\eta$ for every $k\geq1$. Consequently, the LP-based bound $F_{{\rm LB}_{k,m}}$ converges to $\widehat F(\rho)$ as $m\to\infty$, already at $k=1$.
+    \end{cor}
+
+    \begin{proof}
+    Steps~1--4 above do not use concavity. In Step~5, replace the concavity of $P$ by
+    $P(\tr_B\sigma)\geq F(\tr_B\sigma)-\eta\geq\sum_lp_lF(\tr_B\dyad{\psi_l})-\eta\geq\widehat F(\sigma)-\eta$, and conclude with Jensen's inequality for the convex and continuous function $\widehat F$. The second statement follows since $P$ is admissible in the LP, $F_{{\rm LB}_{k,m}}\leq\widehat F$, and $\eta>0$ is arbitrary by the Weierstrass approximation theorem.
+    \end{proof}
+
+    \emph{Concavity is necessary.} Let $P(\a)=\sum_i\a_i^2$ (the purity, which is convex) and $\rho=\tfrac{\I}{2}\otimes\dyad{0}$ on $\C^2\otimes\C^2$. Since $\rho$ is supported on $\C^2\otimes\ket{0}$, every pure state in any decomposition is a product state, so $\widehat P(\rho)=1$. On the other hand, $\Phi_{1,m}=\rho\otimes\rho_A^{\otimes(m-1)}$ is feasible for every $m$ (all its partial transposes are tensor products of positive operators), and its objective value is $P(\rho_A)=1/2$. Hence $P_{{\rm LB}_{1,m}}(\rho)\leq1/2$ for all $m$.
+\fi
+\claude{bib entries still needed by the active text: A.~Uhlmann, Entropy \textbf{12}, 1799 (2010) (continuity of the convex roof, currently \texttt{LOOkupCitations}); G.~Vidal, J.\ Mod.\ Opt.\ \textbf{47}, 355 (2000); Sion (1958); the Weierstrass approximation theorem (any analysis textbook, e.g.\ Rudin) for Appendix~\ref{app:LPconvergence}; the citations listed in the extraction section; and a reference for the $(\operatorname{rank}\rho)^2$ bound in Appendix~\ref{app:tensor} (currently \texttt{CiteWho}). St{\o}rmer (1969) and Hudson--Moody (1976) are only needed if the commented-out proof comes back.}
+
+\section{Symmetry reductions}\label{app:SymRed}
+\claude{this appendix is rewritten from your notes (marginal constraint, PPT constraints, real variables), condensed to the key steps, plus a new subsection on the projection onto the support of $\rho$. I use $D$ throughout for the dimension of one copy of $\C^{d_A}\otimes\C^{d_B}$, with basis $\{\ket{j}\}_{j=0}^{D-1}$, which removes the clash with the $d$ of Sec.~III. See my comment at the end of the real-variables subsection about the idea in your notes of replacing the PPT constraints by invariance under partial transposition: that step is not valid.}
+
+Throughout this appendix, a single copy of $\C^{d_A}\otimes\C^{d_B}$ is identified with $\C^D$, with orthonormal basis $\{\ket{j}\}_{j=0}^{D-1}$.
+
+\subsection{Restriction to the symmetric subspace}
+The symmetric subspace $\text{Sym}^k(\C^D)$ has an orthonormal basis indexed by occupation vectors. The occupation vector $\nu(i_1,\dots,i_k)\in\N^D$ of a basis vector $\ket{i_1,\dots,i_k}\in(\C^D)^{\otimes k}$ has entries $\nu_j$ equal to the number of times $j$ appears in $(i_1,\dots,i_k)$. For example, $\nu(0,1,2,0,0,1,2,2)=(3,2,3)$ and $\nu(1,1,1,1,1,1,1,1)=(0,8,0)$ for $D=3$, $k=8$. We define the isometry $V_k:(\C^D)^{\otimes k}\to\text{Sym}^k(\C^D)$ as
+\begin{equation}
+    V_k = \sum_{i_1, \dots, i_k=0}^{D-1} \binom{k}{\nu(i_1, \dots, i_k)}^{-1/2}\ket{\nu(i_1, \dots, i_k)}\bra{i_1, \dots, i_k},
+\end{equation}
+where $\binom{k}{\nu}=k!/\prod_j\nu_j!$ is the multinomial coefficient, i.e., the number of basis vectors with occupation vector $\nu$. It satisfies $V_kV_k^\dagger=\I_{\text{Sym}^k}$ and $V_k^\dagger V_k=\Pi_{\rm sym}^{k}$, and it has real entries. Since every feasible $\Omega_k$ is supported on the symmetric subspace, $\Omega_k=V_k^\dagger\Omega_k^{\rm sym}V_k$ with $\Omega_k^{\rm sym}=V_k\Omega_kV_k^\dagger$, a matrix of size $\binom{k+D-1}{k}$. The objective becomes $\tr\big(V_k(O_P\otimes\I^B)V_k^\dagger\,\Omega_k^{\rm sym}\big)$.
+
+\subsection{Marginal constraint}
+Writing $\nu(j,i_2,\dots,i_k)=\nu_\downarrow+e_j$, where $\nu_\downarrow=\nu(i_2,\dots,i_k)$ is an occupation vector of $k-1$ particles and $e_j$ the $j$-th unit vector, the matrix elements of the marginal are
+\begin{align}
+    \big(\tr_{2,\dots,k}\Omega_k\big)_{jj'}
+    &=\sum_{i_2,\dots,i_k}\bra{j,i_2,\dots,i_k}V_k^\dagger\,\Omega_k^{\rm sym}\,V_k\ket{j',i_2,\dots,i_k}
+    =\sum_{\nu_\downarrow}\binom{k-1}{\nu_\downarrow}\frac{\bra{\nu_\downarrow+e_j}\Omega_k^{\rm sym}\ket{\nu_\downarrow+e_{j'}}}{\sqrt{\binom{k}{\nu_\downarrow+e_j}\binom{k}{\nu_\downarrow+e_{j'}}}},
+\end{align}
+where we grouped the $\binom{k-1}{\nu_\downarrow}$ tuples $(i_2,\dots,i_k)$ with the same occupation vector. Using $\binom{k}{\nu_\downarrow+e_j}=\binom{k-1}{\nu_\downarrow}\frac{k}{\nu_{\downarrow,j}+1}$, this simplifies to
+\begin{equation}
+    \big(\tr_{2,\dots,k}\Omega_k\big)_{jj'}=\frac1k\sum_{\nu_\downarrow}\sqrt{\nu_{\downarrow,j}+1}\,\bra{\nu_\downarrow+e_j}\Omega_k^{\rm sym}\ket{\nu_\downarrow+e_{j'}}\,\sqrt{\nu_{\downarrow,j'}+1}
+    =\frac1k\tr\!\big(\hat a_{j'}^\dagger\hat a_j\,\Omega_k^{\rm sym}\big),
+\end{equation}
+with the bosonic creation operators $\hat a_j^\dagger:\text{Sym}^{k-1}(\C^D)\to\text{Sym}^k(\C^D)$,
+\begin{equation}
+    \hat a_j^\dagger=\sum_{\nu_\downarrow}\sqrt{\nu_{\downarrow,j}+1}\,\ket{\nu_\downarrow+e_j}\bra{\nu_\downarrow}.
+\end{equation}
+The marginal constraint thus becomes the linear constraint
+\begin{equation}
+    \frac1k\sum_{j,j'=0}^{D-1}\tr\!\big(\hat a_{j'}^\dagger\hat a_j\,\Omega_k^{\rm sym}\big)\,\ket{j}\bra{j'}=\rho,
+\end{equation}
+i.e., the normalized one-body reduced density matrix of $\Omega_k^{\rm sym}$ must equal $\rho$.
+
+\subsection{Partial-transpose constraints}
+By permutation symmetry, $\Omega_k^{T_S}$ only depends on the size of $S$, and $\Omega_k^{T_{S^c}}=(\Omega_k^{T_S})^T$, so it suffices to impose the constraints for $S=\{1,\dots,l\}$ with $1\leq l\leq\lfloor k/2\rfloor$. For such a cut, consider the isometry $V_l\otimes V_{k-l}:(\C^D)^{\otimes k}\to\text{Sym}^l(\C^D)\otimes\text{Sym}^{k-l}(\C^D)$, which satisfies $(V_l\otimes V_{k-l})^\dagger(V_l\otimes V_{k-l})=\Pi^l_{\rm sym}\otimes\Pi^{k-l}_{\rm sym}$. Since $\Pi^k_{\rm sym}\leq\Pi^l_{\rm sym}\otimes\Pi^{k-l}_{\rm sym}$, the map
+\begin{equation}
+    W_l=(V_l\otimes V_{k-l})V_k^\dagger:\ \text{Sym}^k(\C^D)\to\text{Sym}^l(\C^D)\otimes\text{Sym}^{k-l}(\C^D)
+\end{equation}
+is an isometry, and $\Omega_k=(V_l\otimes V_{k-l})^\dagger\,W_l\Omega_k^{\rm sym}W_l^\dagger\,(V_l\otimes V_{k-l})$. Because $V_l$ has real entries, transposing the first $l$ copies commutes with this conjugation:
+\begin{equation}
+    \Omega_k^{T_S}=(V_l\otimes V_{k-l})^\dagger\,\big(W_l\Omega_k^{\rm sym}W_l^\dagger\big)^{T_1}\,(V_l\otimes V_{k-l}),
+\end{equation}
+where $T_1$ denotes the transpose of the first factor $\text{Sym}^l(\C^D)$ in the occupation basis. Conjugating back with $V_l\otimes V_{k-l}$ shows that
+\begin{equation}
+    \Omega_k^{T_S}\succeq0\iff\big(W_l\,\Omega_k^{\rm sym}W_l^\dagger\big)^{T_1}\succeq0,\qquad 1\leq l\leq\lfloor k/2\rfloor,
+\end{equation}
+which are matrices of size $\binom{l+D-1}{l}\binom{k-l+D-1}{k-l}$.
+\claude{from your notes: these PPT constraints are the bottleneck in practice ($\C^3\otimes\C^3$ at $k=3$ already too large on a laptop). Worth saying in the numerical-details appendix, together with the observation that convergence (Theorem~\ref{thm:ConvergenceSDPcroof}) does not need them, so they can be dropped or imposed only for small $l$ when memory is tight.}
+
+\subsection{Real variables}
+If $\rho$ has real entries, the SDP can be restricted to real variables. Let $\Omega_k$ be feasible. Entrywise complex conjugation commutes with partial traces, partial transposes and with the real projector $\Pi_{\rm sym}^{k}$, and $\rho^*=\rho$, so $\Omega_k^*$ is feasible as well. Its objective value is the same, since the isotypic projectors, being linear combinations of permutation matrices with real characters, are real, and so is $O_P$. By convexity, $\frac12(\Omega_k+\Omega_k^*)$ is feasible, real, and has the same objective value. Hence the optimum is attained by a real matrix, and since $V_k$ and $W_l$ are real, $\Omega_k^{\rm sym}$ can be taken real symmetric, which halves the number of variables. For the true $\omega_k$ of a decomposition $\{p_i,\ket{\psi_i}\}$, this real matrix is $\frac12\sum_ip_i\big(\dyad{\psi_i}^{\otimes k}+\dyad{\psi_i^*}^{\otimes k}\big)$, corresponding to the decomposition $\{\frac{p_i}{2},\ket{\psi_i}\}\cup\{\frac{p_i}{2},\ket{\psi_i^*}\}$ of $\rho$, which has the same value of the objective.
+\claude{about the idea at the end of your notes (``if the input state is real, its decomposition will also be over the reals, so instead of PPT we can check that the state equals its own partial transpose''): this is not valid, for two reasons. (1) A real $\rho$ need not have an optimal decomposition into real vectors: the argument above only gives the symmetrized ensemble $\{\psi_i,\psi_i^*\}$, whose vectors are still complex. Restricting to real vectors gives the ``rebit'' convex roof, which can be strictly larger; the classic example is the entanglement of formation of two rebits (Caves, Fuchs, Rungta, 2001), which differs from Wootters' formula. So imposing a real decomposition would no longer give a lower bound on $\widehat P$. (2) Even for the real matrix $\frac12\sum_ip_i(\dyad{\psi_i}^{\otimes k}+\dyad{\psi_i^*}^{\otimes k})$, the partial transpose on $S$ maps $\dyad{\psi_i}^{\otimes k}$ to $\dyad{\psi_i^*}^{\otimes l}\otimes\dyad{\psi_i}^{\otimes(k-l)}$, which is not a term of the sum, so $\omega^{T_S}\neq\omega$ in general. Real \emph{variables} are fine (as written above); invariance under partial transposition is not. I left that idea out of the rewritten text.}
+
+\subsection{Projection onto the support of $\rho$}\label{app:supportReduction}
+Let $r=\operatorname{rank}\rho$ and let $V_\rho:\C^D\to\C^r$ be an isometry onto the support of $\rho$, i.e., $V_\rho V_\rho^\dagger=\I_r$ and $V_\rho^\dagger V_\rho=\Pi_\rho$, the projector onto $\operatorname{supp}\rho$. Every pure state in a decomposition of $\rho$ lies in $\operatorname{supp}\rho$, so every $\omega_k$ is supported on $(\operatorname{supp}\rho)^{\otimes k}$. The same holds for every feasible point of the relaxation: since $\tr\big(((\I-\Pi_\rho)\otimes\I)\,\Omega_k\big)=\tr\big((\I-\Pi_\rho)\rho\big)=0$ and $\Omega_k\succeq0$, we have $((\I-\Pi_\rho)\otimes\I)\,\Omega_k=0$, and by permutation symmetry the same holds on every copy. Hence $\Omega_k=\Pi_\rho^{\otimes k}\Omega_k\Pi_\rho^{\otimes k}$, and we can equivalently optimize over
+\begin{equation}
+    \Omega_k^\rho=V_\rho^{\otimes k}\,\Omega_k\,V_\rho^{\dagger\otimes k},
+\end{equation}
+acting on $(\C^r)^{\otimes k}$, with objective operator $V_\rho^{\otimes k}(O_P\otimes\I^B)V_\rho^{\dagger\otimes k}$ and marginal constraint $\tr_{2,\dots,k}\Omega_k^\rho=V_\rho\rho V_\rho^\dagger$, which is a full-rank $r\times r$ matrix. The Bose symmetry is preserved, since $V_\rho^{\otimes k}$ commutes with permutations. The partial-transpose constraints are also equivalent: $(V_\rho^{\otimes k}\Omega_kV_\rho^{\dagger\otimes k})^{T_S}$ and $\Omega_k^{T_S}$ are related by congruences with $V_\rho$ on the copies outside $S$ and with $V_\rho^*$ on the copies in $S$, in both directions, so one is positive semidefinite if and only if the other is. Combined with the restriction to the symmetric subspace, the variable has size $\binom{k+r-1}{k}$ instead of $\binom{k+D-1}{k}$. This is an exact reformulation, not a further relaxation. If $\rho$ is real, its eigenvectors can be chosen real, so $V_\rho$ is real and the real-variable reduction still applies.
+
+For the simplified relaxation, the same argument applies to each register separately: the copies $A_jB_j$ can be projected onto $\operatorname{supp}\rho$, and the marginal copies $A_j$ onto $\operatorname{supp}\rho_A$, since each of them has reduced state $\rho_A$ by the permutation invariance of $\tr_B\Phi_{k,m}$.
+\claude{new subsection, as requested. Please check that the last paragraph matches what the code does for the simplified SDP. Note also that the tensor-decomposition appendix already restricts to $\operatorname{supp}\rho$ before running PARAFAC; once the SDP itself works on $(\C^r)^{\otimes k}$, that step is automatic and the text there can just refer back here.}
+
+\subsection{Simplified relaxation}
+\claude{PLACEHOLDER: one or two sentences on how $\Phi_{k,m}$ is reduced in your code: the first $k$ copies of $AB$ through $V_k$ (Bose symmetry), and the marginal copies $A_{k+1},\dots,A_m$ either kept as a full tensor product or reduced using their permutation invariance. If they are not reduced, say so, since the table entry ``Simplified'' depends on it.}
+
+\section{Tensor decomposition}\label{app:tensor}
+We take $\Omega_{k,m}$ from the SDP, which approximates the optimal state $\omega_{k,m}$.
+We trace out the marginal copies, which we cannot use to extract the tensor powers, and obtain $\Omega_k$.
+If $\rho$ is not full rank, we restrict to the range of $\rho$. Let $V_\rho$ be the isometry mapping $\operatorname{supp} \rho \to \C^{\operatorname{rank} \rho}$. We work with the matrix $\Omega_\rho = V_\rho^{\otimes k} \Omega_k V_\rho^{\dagger\otimes k}$. This makes the algorithm less expensive and also ensures that all the extracted tensors are in the range of $\rho$.
+
+After this step, we need to ensure we have no complex terms to run the tensor extraction algorithm. Let $\{G_i\}_{i=1}^{(\operatorname{rank}(\rho))^2}$ be the Gell-Mann basis; a Hilbert Schmidt orthonormal basis of hermitian operators on the support of $\rho$. Every pure state can be written as $\dyad{\psi} = \sum_i x_i G_i$ where $x$ is a real vector and $\|x\|^2 = 1$. Then, we create the $k$-dimensional tensor $\Omega^G$ from the coefficients $\Omega^G_{i_1, \dots, i_k} = \tr(G_{i_1} \otimes \dots \otimes G_{i_k} \Omega_\rho)$. On this tensor, we run PARAFAC, enforcing the condition that all the $p_i$ are positive to obtain the decomposition $\{p_i, v_i^{\otimes k}\}$. From this decomposition we recover pure states $\ket{\psi_i}$ by taking the top eigenvector of $\sum_j v_{i,j} G_j$. Finally, we repair the $\{p_i, \ket{\psi_i}\}$ as shown in Section~\ref{sec:extractingTheDecomposition}.
+
+To choose the number of terms that PARAFAC, we scan $r \in [\operatorname{rank}\rho, (\operatorname{rank}\rho)^2]$ and keep the best results. Note that $\rho$ decomposes in at least $r$ terms and $r$ can be at most $(\operatorname{rank}\rho)^2$ by Ref.~\cite{CiteWho}. It also helps to reduce the rank of $\Omega_{k,m}$ beforehand by running another SDP $\max \tr(R \,\Omega_{k,m})$ with the same constraints, with a random operator $R$, making sure that $\tr(O_P \Omega_{k,m})$ stays optimal. This helps make sure the optimal solution is not a convex combination of optimal decompositions, lowering the rank of $\Omega_k$.
+\claude{still open from last round (precision points): (1) \emph{Notation.} The main text calls the variable of the simplified SDP $\Phi_{k,m}$ and the full one $\Omega_k$; say ``We take the optimal solution $\Phi_{k,m}$ (or $\Omega_k$ for the full SDP)''. With the support reduction of Appendix~\ref{app:supportReduction}, the restriction paragraph above can simply refer there. (2) \emph{Basis.} Generalized Gell-Mann matrices are traceless; the basis must also contain $G_0=\I/\sqrt{\operatorname{rank}\rho}$. Write ``the normalized identity together with the generalized Gell-Mann matrices''. (3) \emph{Symmetric factors.} Plain PARAFAC fits independent factors in each mode; say whether you use a symmetric CP routine or symmetrize afterwards. (4) \emph{Weights.} State that you normalize $v_{i,0}=1/\sqrt{\operatorname{rank}\rho}$ and absorb the scale into $p_i$. (5) \emph{Choice of $r$.} ``To choose the number of terms that PARAFAC,'' is missing a verb (``that PARAFAC fits''); also, $r$ is used both for the number of terms and (in my new Appendix~\ref{app:supportReduction}) for $\operatorname{rank}\rho$; consider $n_{\rm terms}$ for the former. ``$\rho$ decomposes in at least $r$ terms'' should read ``any decomposition of $\rho$ has at least $\operatorname{rank}\rho$ terms, and an optimal decomposition needs at most $(\operatorname{rank}\rho)^2$ terms (Carath\'eodory)''. (6) \emph{Rank reduction.} State precisely: ``we minimize $\tr(R\,\Phi_{k,m})$ for a random Hermitian $R$ over the same feasible set with the additional constraint $\tr\big((O_P\otimes\I)\Phi_{k,m}\big)\leq P_{\rm LB}+\delta$; this selects an extreme point of the near-optimal face, which generically has low rank''.}
+
+
+\section{Linear program for non-polynomial functions}\label{app:LP}
+
+\subsection{Construction of the LP and of the single SDP}
+We optimize over symmetric polynomials of degree at most $m$. Since polynomials of lower degree can be lifted to degree $m$ (Lemma~\ref{lem:lifting}), we parametrize them as $P(\a)=\sum_{\lambda\vdash m}c_\lambda s_\lambda(\a)$, and the LP variables are the coefficients $\vec c=(c_\lambda)_\lambda$. Given the function $F$, we require $P(\a)\leq F(\a)$ for all spectra $\a$, and enforce this constraint discretely on a grid of spectra $\{\a_g\}_g$, where the values $s_\lambda(\a_g)$ and $F(\a_g)$ are precomputed. By symmetry, it suffices to take grid points with $\a_{g,1}\geq\a_{g,2}\geq\dots\geq\a_{g,d_A}\geq0$ and $\sum_i\a_{g,i}=1$.
+
+Writing $\mu_\lambda(\Phi)=\tr\big((\tfrac{1}{f^\lambda}\Pi^\lambda\otimes\I^B)\Phi\big)$, the objective is $\tr\big((O_P\otimes\I^B)\Phi_{k,m}\big)=\sum_\lambda c_\lambda\,\mu_\lambda(\Phi_{k,m})$, so the bound reads
+\begin{equation}
+    F_{{\rm LB}_{k,m}}=\max_{\vec c}\ \min_{\Phi_{k,m}}\ \sum_\lambda c_\lambda\,\mu_\lambda(\Phi_{k,m})
+    \quad\text{s.t.}\quad \sum_\lambda c_\lambda s_\lambda(\a_g)\leq F(\a_g)\ \ \forall g,
+\end{equation}
+with $\Phi_{k,m}$ ranging over the feasible set of Eq.~\eqref{eq:marginals_SDP}. The objective is bilinear, the feasible set of $\Phi_{k,m}$ is convex and compact, and the admissible $\vec c$ form a convex set, so by Sion's minimax theorem~\cite{Sion1958} we can exchange the maximum and the minimum. For fixed $\Phi_{k,m}$, the inner maximization is an LP whose dual is
+\begin{equation}
+    \min_{y\geq0}\ \sum_g y_g F(\a_g)\quad\text{s.t.}\quad \sum_g y_g\,s_\lambda(\a_g)=\mu_\lambda(\Phi_{k,m})\ \ \forall\lambda .
+\end{equation}
+The primal is always feasible (take $P$ constant, equal to $\min_g F(\a_g)$), so strong duality holds. Merging both minimizations gives the single SDP
+\begin{align}
+    F_{{\rm LB}_{k,m}}=\min_{\Phi_{k,m},\,y}\ & \sum_g y_g F(\a_g)\\
+    \text{s.t. }& \Phi_{k,m}\ \text{feasible for Eq.~\eqref{eq:marginals_SDP}},\quad y\geq0, \nonumber\\
+    & \sum_g y_g\,s_\lambda(\a_g)=\tr\big((\tfrac{1}{f^\lambda}\Pi^\lambda\otimes\I^B)\,\Phi_{k,m}\big)\quad\forall\lambda\vdash m. \nonumber
+\end{align}
+Since $\sum_\lambda f^\lambda s_\lambda(\a)=(\sum_i\a_i)^m=1$ and $\sum_\lambda\Pi^\lambda=\I$, the constraints imply $\sum_g y_g=1$: the SDP searches for a probability distribution over grid spectra that reproduces the Schur moments of $\Phi_{k,m}$. The coefficients $c_\lambda$ of the optimal polynomial are recovered as the dual variables of the equality constraints.
+
+Since the grid is discrete, the polynomial might be larger than $F$ between grid points, to get a lower bound we need to be able to approximate the error $\epsilon = \max_\a P(\a)-F(\a)$. This can be done in a variety of ways.
+\claude{still open, small: the sentence is a comma splice, and it should say what is done with $\epsilon$. Suggest: ``Since the grid is discrete, the optimal polynomial $P^*$ may exceed $F$ between grid points. We therefore report $F_{{\rm LB}_{k,m}}-\epsilon$, where $\epsilon=\max_\a\big(P^*(\a)-F(\a)\big)$ is estimated numerically for the polynomial returned by the solver.''}
+
+\subsection{Convergence of the LP-based bound}\label{app:LPconvergence}
+To separate the effect of the grid from that of the hierarchy, consider the bound in which the constraint $P\leq F$ is imposed on the whole simplex rather than on a grid, here for the full hierarchy of Eq.~\eqref{eq:SDPcroof1},
+\begin{equation}\label{eq:FLBexact}
+    \widetilde F_{{\rm LB}_k}(\rho)=\sup_{\substack{P\leq F,\ \deg P\leq k}}\ \min_{\Omega_k}\ \tr\big((O_P\otimes\I^B)\,\Omega_k\big),
+\end{equation}
+where the supremum runs over symmetric polynomials of degree at most $k$ with $P(\a)\leq F(\a)$ for all spectra $\a$.
+
+\begin{proposition}\label{prop:LPconvergence}
+Let $F$ be a continuous symmetric function on the simplex of spectra. Then $\widetilde F_{{\rm LB}_k}(\rho)\leq\widehat F(\rho)$, the sequence $\widetilde F_{{\rm LB}_k}(\rho)$ is nondecreasing in $k$, and $\lim_{k\to\infty}\widetilde F_{{\rm LB}_k}(\rho)=\widehat F(\rho)$.
+\end{proposition}
+\begin{proof}
+\emph{Upper bound.} For every admissible $P$, $\min_{\Omega_k}\tr\big((O_P\otimes\I^B)\Omega_k\big)\leq\widehat P(\rho)$, since $\omega_k$ is feasible for every decomposition. Moreover $P\leq F$ pointwise implies $\sum_ip_iP(\psi_i)\leq\sum_ip_iF(\psi_i)$ for every decomposition, hence $\widehat P(\rho)\leq\widehat F(\rho)$.
+
+\emph{Monotonicity.} A polynomial admissible at level $k$ remains admissible at level $k+1$, and for a fixed $P$ the value is nondecreasing in $k$ (Appendix~\ref{app:monotonicity}).
+
+\emph{Convergence.} Let $\eta>0$. By the Weierstrass approximation theorem there is a polynomial $Q$ with $|F(\a)-Q(\a)|\leq\eta/2$ on the simplex. Replacing $Q$ by its average over permutations of the variables, which does not increase the approximation error since $F$ is symmetric, we may assume $Q$ symmetric. Then $P=Q-\eta/2$ is a symmetric polynomial with $F-\eta\leq P\leq F$ on the simplex; let $n=\deg P$. For $k\geq n$, $P$ is admissible in Eq.~\eqref{eq:FLBexact}, so by Theorem~\ref{thm:ConvergenceSDPcroof}
+\begin{equation}
+    \liminf_{k\to\infty}\widetilde F_{{\rm LB}_k}(\rho)\ \geq\ \lim_{k\to\infty}P_{{\rm LB}_k}(\rho)=\widehat P(\rho)\ \geq\ \widehat F(\rho)-\eta,
+\end{equation}
+where the last inequality follows from $P\geq F-\eta$ pointwise and $\sum_ip_i=1$. Since $\eta>0$ is arbitrary and $\widetilde F_{{\rm LB}_k}\leq\widehat F$, the claim follows.
+\end{proof}
+
+With a finite grid, the set of admissible polynomials is larger than in Eq.~\eqref{eq:FLBexact}, so the computed value is at least $\widetilde F_{{\rm LB}_k}$; it becomes a valid lower bound after subtracting the error $\epsilon$ of the returned polynomial. How fast this correction vanishes as the grid is refined, uniformly in the degree, is not analyzed here.
+\claude{proof written, as requested. I stated convergence for the continuum-constrained bound $\widetilde F_{\rm LB}$, which is exactly what can be proven cleanly, and added the last paragraph to make explicit that the grid correction is not covered, which matches your concern about grid corrections at high degree. Everything is stated for the full hierarchy (Theorem~\ref{thm:ConvergenceSDPcroof}); the same holds for the simplified one in $k$, once the one-line inequality $P_{{\rm LB}_k}\leq P_{{\rm LB}_{k,m}}$ is in the text.}
+
+\section{LOCC feasibility SDP}\label{app:LOCC}
+Let $\ket{\psi}$ be the initial pure state and $\rho$ the target mixed state. By Ref.~\cite{Jonathan_1999}, $\ket{\psi}$ can be converted into $\rho$ by LOCC if and only if there is a decomposition $\{p_i,\ket{\psi_i}\}$ of $\rho$ such that
+\begin{equation}\label{eq:LOCCcriterion}
+    \sum_i p_i E_j(\psi_i)\leq E_j(\psi)\qquad\text{for all } j=1,\dots,d_A-1 .
+\end{equation}
+Since all these inequalities must hold for the \emph{same} decomposition, testing them one monotone at a time is not sufficient. Instead, we combine the LP construction of Appendix~\ref{app:LP} for all the Vidal monotones into a single SDP.
+
+\paragraph*{Admissible polynomials.}
+For each $j$, let $\mathcal{P}_j$ be the set of coefficient vectors $\vec c^{(j)}$ such that the polynomial $P_j=\sum_{\lambda\vdash m}c^{(j)}_\lambda s_\lambda$ satisfies $P_j(\a_g)\leq E_j(\a_g)$ on all grid points, and let
+\begin{equation}
+    \epsilon_j(P_j)=\max_{\a}\big(P_j(\a)-E_j(\a)\big)
+\end{equation}
+be its maximal violation between grid points. If a decomposition satisfies Eq.~\eqref{eq:LOCCcriterion}, then its operator $\omega_{k,m}$ is feasible for Eq.~\eqref{eq:marginals_SDP} and, for every $j$ and every $\vec c^{(j)}\in\mathcal{P}_j$,
+\begin{equation}\label{eq:LOCCnecessary}
+    \tr\big((O_{P_j}\otimes\I^B)\,\omega_{k,m}\big)=\sum_ip_iP_j(\a_i)\leq\sum_ip_iE_j(\a_i)+\epsilon_j(P_j)\leq E_j(\psi)+\epsilon_j(P_j),
+\end{equation}
+where $\a_i$ is the entanglement spectrum of $\ket{\psi_i}$.
+
+\paragraph*{The SDP.}
+With the moments $\mu_\lambda(\Phi)=\tr\big((\tfrac{1}{f^\lambda}\Pi^\lambda\otimes\I^B)\Phi\big)$ of Appendix~\ref{app:LP}, we define
+\begin{align}\label{eq:LOCCsdp}
+    s_{k,m}=\min_{\Phi_{k,m},\,y^{(j)},\,s}\ & s\\
+    \text{s.t. }& \Phi_{k,m}\ \text{feasible for Eq.~\eqref{eq:marginals_SDP}},\quad y^{(j)}\geq0\ \ \forall j, \nonumber\\
+    & \sum_g y^{(j)}_g\,s_\lambda(\a_g)=\mu_\lambda(\Phi_{k,m})\quad\forall\lambda\vdash m,\ \forall j, \nonumber\\
+    & \sum_g y^{(j)}_g\,E_j(\a_g)-E_j(\psi)\leq s\quad\forall j. \nonumber
+\end{align}
+For fixed $\Phi_{k,m}$, the minimization over each $y^{(j)}$ is exactly the dual LP of Appendix~\ref{app:LP} with $F=E_j$. By strong duality, it equals the largest value of $\tr\big((O_{P_j}\otimes\I^B)\Phi_{k,m}\big)$ over admissible polynomials $\vec c^{(j)}\in\mathcal{P}_j$. Hence
+\begin{equation}
+    s_{k,m}=\min_{\Phi_{k,m}}\ \max_{j}\ \max_{\vec c^{(j)}\in\mathcal{P}_j}\Big[\tr\big((O_{P_j}\otimes\I^B)\Phi_{k,m}\big)-E_j(\psi)\Big].
+\end{equation}
+Writing the maximum over $j$ as a maximum over probability vectors $t=(t_j)_j$, and substituting $\vec d^{(j)}=t_j\vec c^{(j)}$, the objective becomes bilinear in $\Phi_{k,m}$ and $(t,\vec d^{(j)})$, over convex sets with the feasible set of $\Phi_{k,m}$ compact. By Sion's theorem~\cite{Sion1958},
+\begin{equation}\label{eq:LOCCminimax}
+    s_{k,m}=\max_{t,\ \vec c^{(j)}\in\mathcal{P}_j}\ \min_{\Phi_{k,m}}\ \sum_j t_j\Big[\tr\big((O_{P_j}\otimes\I^B)\Phi_{k,m}\big)-E_j(\psi)\Big].
+\end{equation}
+The optimal weights $t_j^*$ are the dual variables of the last constraints in Eq.~\eqref{eq:LOCCsdp}, and the optimal coefficients $c^{(j)*}_\lambda$ are the dual variables of the moment constraints divided by $t_j^*$. We denote the corresponding polynomials by $P_j^*$; only those with $t^*_j>0$ are needed.
+
+\paragraph*{Certificate of non-convertibility.}
+If
+\begin{equation}\label{eq:LOCCcertificate}
+    s_{k,m}>\sum_j t_j^*\,\epsilon_j(P_j^*),
+\end{equation}
+then $\ket{\psi}$ cannot be converted into $\rho$ by LOCC. Indeed, if a decomposition satisfied Eq.~\eqref{eq:LOCCcriterion}, its $\omega_{k,m}$ would be feasible, and Eqs.~\eqref{eq:LOCCminimax} and \eqref{eq:LOCCnecessary} would give
+\begin{equation}
+    s_{k,m}\leq\sum_j t^*_j\Big[\tr\big((O_{P^*_j}\otimes\I^B)\,\omega_{k,m}\big)-E_j(\psi)\Big]\leq\sum_jt^*_j\,\epsilon_j(P^*_j),
+\end{equation}
+a contradiction. As for $F_{\rm LB}$, the grid errors only need to be computed a posteriori, for the polynomials returned by the solver. The certificate is valid at any level, including $k=1$, and $s_{k,m}$ is nondecreasing in $k$ and $m$ by the argument of Appendix~\ref{app:monotonicity}.
+
+\paragraph*{Certificate of convertibility.}
+If $s_{k,m}\leq0$ and $k\geq3$, we extract a decomposition from the optimal $\Phi_{k,m}$ as described in Appendix~\ref{app:tensor}, repair it into an exact decomposition of $\rho$ (Sec.~\ref{sec:extractingTheDecomposition}), and evaluate the Vidal monotones of its elements exactly. If Eq.~\eqref{eq:LOCCcriterion} holds, this decomposition proves that $\ket{\psi}$ can be converted into $\rho$. Otherwise, the test is inconclusive at this level, and one can increase $k$ or $m$.
+
+\claude{notes on this appendix (unchanged from last round, no reply yet): (1) Double-check the sign conventions and the $\frac{1}{f^\lambda}$ normalization against your implementation, and whether the code solves this optimization version or a pure feasibility problem with a fixed threshold; the optimization version is simpler to justify. (2) If for some instances no feasible $\Phi_{k,m}$ has moments representable by grid distributions, Eq.~\eqref{eq:LOCCsdp} is infeasible ($s_{k,m}=+\infty$) and the test is inconclusive. If this happens in practice, a standard fix is to bound the coefficients, $|c_\lambda|\leq C$, which adds a term $C\,\|\mu(\Phi_{k,m})-S^Ty^{(j)}\|_1$ to the left-hand side of the last constraints and keeps the SDP always feasible. (3) The main-text paragraph should be updated to match (see my comment there).}
+
+\section{Numerical details}\label{app:numerics}
+\claude{PLACEHOLDER section; referees will ask for this, and it is also where the numbers for the table in the main text come from. To include: (1) solver and tolerances (e.g.\ MOSEK/SCS, primal--dual gap), and what ``nonzero'' or ``infeasible'' means numerically; (2) how $O_P$ is built: characters $\chi^\lambda$ (e.g.\ Murnaghan--Nakayama rule or a library), dimensions $f^\lambda$ (hook length formula), and how the Schur coefficients $c_\lambda$ of a given polynomial are computed; (3) which partial-transpose constraints are imposed in practice for each relaxation (your notes say they are the memory bottleneck); (4) grid parameters of the LP; (5) definitions and parameter ranges of all states used in the figures (the bound-entangled PPT states for the histogram, the families for the entanglement of formation and Vidal monotones, the state families in the LOCC 3d plot); (6) hardware and typical runtimes per level, and the largest $(d_A,d_B,k,m)$ reached; (7) a code/data availability statement.}
+
+Plots: Polynomial measures, bound entanglement PPT states histogram, entanglement of formation and Vidal monotones. LOCC convertibility 3d plot.
+\claude{this plot list is plain text, so it will be printed at the end of the appendix; wrap it in \texttt{\textbackslash anton\{\dots\}} or comment it out.}
+
+\end{widetext}
+\end{document}

@@ -38,6 +38,7 @@
       \draw[cGray, densely dashed] (axis cs:10,0) -- (axis cs:10,1.38);\node[font=\scriptsize, anchor=south] at (axis cs:5,1.38) {PPT (bound entangled)};\node[font=\scriptsize, anchor=south] at (axis cs:12.5,1.38) {NPT};
     \end{axis}
   \end{tikzpicture}
-  \caption{Lower bounds on the entanglement of formation for different PPT and NPT states. The bounds are shown at different levels of the SDP with embedded LP. The bars are normalized by a reference value which is simply the lowest of the 2 extracted upper bounds for the given state and we show that the gap closes as the hierarchy level increases.
-  We could not compute the bound at level $(2,4)$ for the Horodecki $3\times3$ and the Piani $4\times4$ state as their rank is too high and the SDP exceeded the memory of our machine.}
+  \caption{Lower bounds on the entanglement of formation for different PPT and NPT states, from the SDP with embedded LP (Sec.~\ref{sec:LP}). Bars: lower bounds from the simplified hierarchy at the levels $(k,m)$ shown in the legend. Markers: upper bounds from the decomposition extracted from the SDP solution at $k=m=3$ (orange) and from HJW gradient descent over decompositions (black). All values are divided by the reference printed above each state: the exact convex roof for two qubits (marked $^*$), and the lowest of the two upper bounds otherwise. The gap closes as the level of the hierarchy increases.
+  The level $(2,4)$ is missing for the Horodecki $3\times3$ and the Piani $4\times4$ states, since their rank is too high and the SDP exceeded the memory of our machine.}
+  \label{fig:EoF}
 \end{figure*}

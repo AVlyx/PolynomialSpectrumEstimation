@@ -9,7 +9,7 @@
     \begin{axis}[at={(0,-0.48\textwidth)}, width=\textwidth, height=0.29\textwidth, ymin=0, ymax=1.38, xmin=0.30000000000000004, xmax=14.7,
       ylabel={$E_{1,\mathrm{LB}}\,/\,$ref}, ytick={0,0.25,0.5,0.75,1}, xtick={1,2,3,4,5,6,7,8,9,11,12,13,14},
       xticklabels={{Tiles UPB},{Pyramid UPB},{GenTiles2 UPB},{Chessboard},{Cross-hatch},{Rank-4 PPT},{Horodecki $3\times3$},{Horodecki $2\times4$},{Piani $4\times4$},{Werner $2\times2$},{Gisin},{MEMS},{Bell + $\ket{01}$}}, xticklabel style={rotate=35, anchor=north east, font=\scriptsize, inner sep=1pt},
-      tick label style={font=\footnotesize}, label style={font=\small}, title={(b) Vidal monotone $E_1=1-\alpha_1$}, title style={font=\small,
+      tick label style={font=\footnotesize}, label style={font=\small}, title={Vidal monotone $E_1=1-\alpha_1$}, title style={font=\small,
       yshift=8pt}, clip=false, legend style={font=\scriptsize, at={(0.5,-0.42)}, anchor=north, legend columns=4, draw=none, /tikz/every even column/.append style={column sep=6pt}}, legend cell align=left,
       ytick style={draw=none}, xtick style={draw=none}, ymajorgrids, grid style={cGray!25}]
             \addplot[ybar, bar width=0.13, bar shift=0pt, draw=none, fill=lvA, area legend] coordinates {(0.675,0.519273) (1.675,0.5211) (2.675,0.510724) (3.675,0.522774) (4.675,0.527619) (5.675,0.523238) (6.675,0.401078) (7.675,0.498753) (8.675,0.40998) (10.675,0.541985) (11.675,0.561018) (12.675,0.5728) (13.675,0.541917)};\addlegendentry{LB $(1,2)$}
@@ -38,6 +38,6 @@
       \draw[cGray, densely dashed] (axis cs:10,0) -- (axis cs:10,1.38);\node[font=\scriptsize, anchor=south] at (axis cs:5,1.38) {PPT (bound entangled)};\node[font=\scriptsize, anchor=south] at (axis cs:12.5,1.38) {NPT};
     \end{axis}
   \end{tikzpicture}
-  \caption{Lower bounds on the Vidal monotone $E_1$ for different PPT and NPT states. All the histograms are normalized by a reference value which is the lowest value of the two computed upperbounds.}
+  \caption{Lower bounds on the Vidal monotone $E_1$ for different PPT and NPT states, from the SDP with embedded LP. Bars: lower bounds from the simplified hierarchy at the levels $(k,m)$ shown in the legend. Markers: upper bounds from the decomposition extracted from the SDP solution at $k=m=3$ (orange) and from HJW gradient descent over decompositions (black). All values are divided by the reference printed above each state: the exact convex roof for two qubits (marked $^*$), and the lowest of the two upper bounds otherwise.}
   \label{fig:Vidal}
 \end{figure*}

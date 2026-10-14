@@ -9,7 +9,7 @@
     \begin{groupplot}[group style={group size=2 by 1, horizontal sep=1.6cm}, width=0.46\textwidth,
       height=0.32\textwidth, tick label style={font=\footnotesize}, label style={font=\small}, title style={font=\small}]
       
-    \nextgroupplot[title={(a) Polynomial maximizing entanglement of formation, level $(3,4)$}, xlabel={$\alpha_1$}, ylabel={$F(\alpha)$, $P(\alpha)$}, xmin=0, xmax=1,
+    \nextgroupplot[title={(a) Entanglement of formation, level $(3,4)$}, xlabel={$\alpha_1$}, ylabel={$F(\alpha)$, $P(\alpha)$}, xmin=0, xmax=1,
       ymin=-0.8, ymax=1.15,
       legend style={font=\scriptsize, at={(0.5,0.02)}, anchor=south, draw=none, fill=white, fill opacity=0.85,
       text opacity=1}, legend cell align=left]
@@ -40,7 +40,7 @@
     \end{groupplot}
   \end{tikzpicture}
   \caption{
-  Polynomials $P\leq F$ extracted from the SDP with embedded LP for different $2$-qubit states. This is the polynomial that yields the best bound on the convex roof at level $(3,4)$ on the grid for each state. Here we show
-  that the LP is adaptive depending on the state and there is not a single polynomial that yields the best bound on the convex roof for all states at the same level. The states used are $\{$ Werner $2\times2$: singlet weight $p=0.8$; Gisin: $\lambda=0.9$, $\theta=\pi/8$; MEMS: $C=0.8$; Bell + $\ket{01}$: $p=0.6$ $\}$. The polynomials are shown as a function of the entanglement spectrum $\a = (\a_1, \a_2) = (\a_1, 1-\a_1)$}.
+  Polynomials $P\leq F$ extracted from the SDP with embedded LP for different $2$-qubit states. For each state, this is the polynomial that yields the best bound on the convex roof on the grid, at level $(3,4)$ for $E_F$ (a) and at level $(3,3)$ for $E_1$ (b). Here we show
+  that the LP is adaptive depending on the state and there is not a single polynomial that yields the best bound on the convex roof for all states at the same level. The states used are $\{$ Werner $2\times2$: singlet weight $p=0.8$; Gisin: $\lambda=0.9$, $\theta=\pi/8$; MEMS: $C=0.8$; Bell + $\ket{01}$: $p=0.6$ $\}$. The polynomials are shown as a function of the entanglement spectrum $\a = (\a_1, \a_2) = (\a_1, 1-\a_1)$.}
   \label{fig:polynomials}
 \end{figure*}
