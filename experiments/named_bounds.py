@@ -18,6 +18,7 @@ import warnings
 import numpy as np
 import scipy.sparse as sp
 
+import qics_lowmem
 from common import (Store, concurrence, entropy_bits, entropy_bits_grad, eof_two_qubits, linear_entropy,
                     linear_entropy_grad, roof_descent, spectrum, timed, vidal, vidal_grad, vidal_two_qubits)
 from named_states import named_states
@@ -25,6 +26,9 @@ from sdp import monomial_observable, nonPolynomialConvexRoof, polynomialConvexRo
 from tensor_decomposition.extract_upper_bound import extract_upper_bound
 
 LEVELS = [(1, 2), (1, 3), (2, 2), (2, 3), (3, 3), (2, 4)]  # (2, 4): same cost class as (3, 3), one more Alice copy
+# Levels whose permutation equalities are passed to the solver instead of eliminated: at (2, 4) the null-space basis
+# fills the cone constraints in almost completely (Piani 4x4: 2e9 nonzeros), the explicit equalities do not.
+EXPLICIT_PERMUTATIONS = {(2, 4)}
 MEASURES = {
     "SL": (linear_entropy, linear_entropy_grad),
     "EF": (entropy_bits, entropy_bits_grad),
@@ -52,6 +56,7 @@ def _keep_large_matrices_sparse() -> None:
 
 
 _keep_large_matrices_sparse()
+qics_lowmem.install()
 RHO_TOL = 1e-8
 
 
@@ -104,11 +109,13 @@ def run_state(key, label, rho, dims, desc, group):
                 if (k, m) == (3, 3) and name != "SL":
                     g33 = store[entry]["coefficients"]
                 continue
+            eliminate = (k, m) not in EXPLICIT_PERMUTATIONS
             if name == "SL":
-                res, t, w = timed(polynomialConvexRoof, rho, monomial_observable({(1, 1): 2.0}, dA), dims, k, m)
+                res, t, w = timed(polynomialConvexRoof, rho, monomial_observable({(1, 1): 2.0}, dA), dims, k, m,
+                                  eliminate_permutations=eliminate)
                 store[entry] = {"value": res.value, "time": t, "status": res.info["sol_status"], "warnings": w}
             else:
-                res, t, w = timed(nonPolynomialConvexRoof, rho, F, dims, k, m)
+                res, t, w = timed(nonPolynomialConvexRoof, rho, F, dims, k, m, eliminate_permutations=eliminate)
                 coefficients = {",".join(map(str, mu)): c for mu, c in res.polynomial.coefficients.items()}
                 store[entry] = {"value": res.value, "time": t, "coefficients": coefficients,
                                 "max_violation": res.polynomial.max_violation, "warnings": w}

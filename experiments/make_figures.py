@@ -100,7 +100,7 @@ def reference(entry: dict, measure: str) -> float | None:
     return min(values) if values else None
 
 
-OPTIONAL_LEVELS = {"2,4"}  # too large for some states (Horodecki 3x3 and Piani 4x4 need > 32 GB): bar left out
+OPTIONAL_LEVELS = {"2,4"}  # bar left out (and noted in the caption) for states without this level
 
 
 def complete(entry: dict, measure: str) -> bool:
@@ -481,7 +481,8 @@ def fig_locc() -> None:
 TABLE_ROWS = [("werner2", "Werner"), ("horodecki24", "Horodecki"), ("tiles", "Tiles UPB"), ("horodecki33", "Horodecki"),
               ("isotropic3", "Isotropic"), ("gentiles2", "GenTiles2 UPB"), ("piani", "Piani")]
 TABLE_LEVELS = [("2,3", "simplified"), ("3,3", "full"), ("2,4", "simplified")]
-OUT_OF_MEMORY = {("horodecki33", "2,4"), ("piani", "2,4")}  # > 23 GB on our machine (see named_bounds.py)
+# Solved alone on a 16 GB Apple M4 laptop with the permutation equalities kept as constraints (> 23 GB when eliminated)
+SEPARATE_RUNS = {("horodecki33", "2,4"), ("piani", "2,4")}
 
 
 def fmt_time(t: float) -> str:
@@ -506,7 +507,9 @@ def tab_dimensions() -> None:
             k, m = map(int, level.split(","))
             raw, reduced = D**k * dA ** (m - k), math.comb(k + r - 1, k) * dA ** (m - k)
             result = entry.get(f"SL/lower/{level}")
-            time = fmt_time(result["time"]) if result else ("OOM" if (key, level) in OUT_OF_MEMORY else "--")
+            time = fmt_time(result["time"]) if result else "--"
+            if result and (key, level) in SEPARATE_RUNS:
+                time += r"$^\dagger$"
             cells += [f"{raw:,}".replace(",", r"\,"), f"{reduced:,}".replace(",", r"\,"), time]
         rows.append(" & ".join(cells) + r" \\")
     if not rows:
@@ -536,7 +539,9 @@ def tab_dimensions() -> None:
   marginal copies ($m>k$) are slower, because of their additional partial-transpose constraints and permutation
   invariance equalities. Times: interior-point solver QICS on a
   16-core laptop with 23\,GB of memory, measured with 13 runs in parallel (one thread each), so they are indicative
-  only. OOM: the solver needs more than the 23\,GB of memory; --: not attempted.}}
+  only. --: not attempted. $^\dagger$: the permutation-invariance equalities are passed to the solver as constraints
+  instead of being eliminated, which keeps the constraint matrix sparse (eliminating them needs more than 23\,GB here);
+  solved alone on an Apple M4 laptop with 16\,GB of memory.}}
   \label{{tab:dimensions}}
 \end{{table*}}""")
 

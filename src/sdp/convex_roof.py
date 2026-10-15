@@ -78,6 +78,7 @@ def polynomialConvexRoof(
     alice_copies: int,
     mode: Literal["min"] | Literal["max"] = "min",
     rank_tol: float | None = 1e-10,
+    eliminate_permutations: bool = True,
     verbose: int = 0,
     **qics_opts,
 ) -> ConvexRoofResult:
@@ -109,10 +110,15 @@ def polynomialConvexRoof(
     rank_tol : eigenvalues of rho <= rank_tol are treated as zero and the SDP is restricted to the
         range of rho (exact, and much smaller for low-rank rho). The discarded eigenvalues perturb rho
         by at most their sum in trace norm. None disables the restriction.
+    eliminate_permutations : eliminate the permutation-invariance equalities of tr_B Phi through a basis of
+        their null space (fewer variables), or pass them to the solver as equality constraints. The null-space
+        basis can fill in the cone constraints almost completely (at (k, m) = (2, 4): 2e9 nonzeros for the Piani
+        state instead of 1e6), so for large problems False needs far less memory.
     verbose : QICS verbosity (0 to 3).
     **qics_opts : passed to ``qics.Solver`` (e.g. max_iter, tol_gap, tol_feas, max_time).
     """
-    sdp = _ConvexRoofSDP(rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol)
+    sdp = _ConvexRoofSDP(rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol,
+                         eliminate_permutations)
     info = sdp.solve(verbose=verbose, **qics_opts)
     value, W = info["p_obj"], sdp.witness(info["y_opt"])
     if mode == "max":
@@ -127,9 +133,11 @@ class _ConvexRoofSDP:
     the AB copies live in range(rho) (``V`` is the isometry, ``D`` the restricted dimension); ``phi`` returns
     Phi in those coordinates and ``lift`` maps it back. The QICS variables z are the free parameters left
     after eliminating the permutation-invariance equalities, with parameters x = Z z and vec(Phi) = M x.
+    Without elimination Z = 1 and the equalities are rows of A after the marginal rows (``kept_rho``).
     """
 
-    def __init__(self, rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol):
+    def __init__(self, rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol,
+                 eliminate_permutations=True):
         dA, dB = dims
         D = dA * dB
         k = full_state_registers
@@ -207,8 +215,11 @@ class _ConvexRoofSDP:
         kept_rho = np.flatnonzero(keep[:n_rho])
 
         # The permutation-invariance rows are homogeneous: eliminate them with x = Z z, ker(A_perm) = range(Z).
-        Z = _null_space_basis(A[len(kept_rho) :])
-        A, b = (A[: len(kept_rho)] @ Z).tocsr(), b[: len(kept_rho)]
+        if eliminate_permutations:
+            Z = _null_space_basis(A[len(kept_rho) :])
+            A, b = (A[: len(kept_rho)] @ Z).tocsr(), b[: len(kept_rho)]
+        else:
+            Z = sp.eye(A.shape[1], format="csr")
 
         # Objective: tr((observable ot I) tr_B Phi).
         c = (marginal.observable_row(observable) @ param.M).real.toarray().reshape(-1, 1)

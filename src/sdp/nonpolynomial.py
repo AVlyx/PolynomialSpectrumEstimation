@@ -58,6 +58,7 @@ def nonPolynomialConvexRoof(
     degree: int | None = None,
     *,
     rank_tol: float | None = 1e-10,
+    eliminate_permutations: bool = True,
     tol: float = 1e-9,
     max_iter: int = 50,
     samples: int = 20000,
@@ -72,7 +73,7 @@ def nonPolynomialConvexRoof(
 
     Parameters
     ----------
-    rho, dims, full_state_registers, alice_copies, rank_tol, verbose, **qics_opts :
+    rho, dims, full_state_registers, alice_copies, rank_tol, eliminate_permutations, verbose, **qics_opts :
         as in ``polynomialConvexRoof``.
     f : symmetric concave function of the spectrum x (a 1-d array of length dA on the simplex, possibly with zeros).
     degree : degree n of g, at most max(k, m). Defaults to max(k, m), all the Alice copies.
@@ -94,13 +95,22 @@ def nonPolynomialConvexRoof(
     if not cls.mus:
         raise ValueError("f vanishes at the center of the simplex, so (concave and >= 0) it vanishes everywhere.")
     observables = [monomial_observable({mu: 1.0}, dA) for mu in cls.mus]
-    sdp = _ConvexRoofSDP(rho, observables[0], dims, full_state_registers, m, "min", rank_tol)
+    sdp = _ConvexRoofSDP(rho, observables[0], dims, full_state_registers, m, "min", rank_tol, eliminate_permutations)
     moments = sp.csr_matrix(np.hstack([sdp.observable_objective(O) for O in observables]).T)  # (mus x z)
 
     points, fvals = cls.points, cls.fvals
     G = cls.basis(points)
+    last = None
     for iteration in range(1, max_iter + 1):
         info, z, c = _solve(sdp, moments, G, fvals, cls.nonnegative, verbose, qics_opts)
+        if info["sol_status"] != "optimal" and last is not None:
+            # Keep the g of the last solved round: the final check below shifts it to g - max(g - f) <= f.
+            warnings.warn(f"cutting-plane round {iteration} not solved ({info['exit_status']}): using the g of round "
+                          f"{iteration - 1}", stacklevel=2)
+            info, z, c = last
+            iteration -= 1
+            break
+        last = info, z, c
         new = _local_maxima(f, cls.basis, c, cls.violations(), rng, samples, known=(points, fvals, G))
         new = [(x, fx) for x, fx, v in new if v > cls.threshold]
         if not new:
