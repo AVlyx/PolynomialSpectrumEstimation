@@ -1,0 +1,45 @@
+% Shared colors and styles of the figures. Every figure reads its data from figures/data/*.csv, written by
+% experiments/make_figures.py (comma separated, header row, nan for missing values: pgfplots skips those points).
+\definecolor{cA}{HTML}{2a78d6}\definecolor{cB}{HTML}{eb6834}\definecolor{cC}{HTML}{1baf7a}%
+\definecolor{cD}{HTML}{4a3aa7}\definecolor{cE}{HTML}{c03b7a}\definecolor{cF}{HTML}{8a6d1f}\definecolor{cGray}{HTML}{8a8984}%
+\definecolor{lvA}{HTML}{c6dbf5}\definecolor{lvB}{HTML}{93bbec}\definecolor{lvC}{HTML}{5e98e0}%
+\definecolor{lvD}{HTML}{2a78d6}\definecolor{lvE}{HTML}{174a8c}\definecolor{lvF}{HTML}{1baf7a}%
+%
+% \namedbars{csv file}{ylabel}{title}: lower bounds of the named states at every level, divided by the reference `ref`
+% (printed above each state at height `label_y`), with the two upper bounds as markers. Columns: see named_csv in
+% make_figures.py. The state positions (`pos`) leave a gap at x = 10 between the PPT and the NPT states.
+\providecommand{\namedbar}[3]{% fill, column, offset
+  \addplot[ybar, bar width=0.13, bar shift=0pt, draw=none, fill=#1, area legend]
+    table[x expr=\thisrow{pos}+#3, y expr=\thisrow{#2}/\thisrow{ref}] {\namedfile};}
+\providecommand{\namedbars}[3]{%
+  \def\namedfile{#1}%
+  \begin{tikzpicture}
+    \begin{axis}[width=\textwidth, height=0.29\textwidth, ymin=0, ymax=1.38, xmin=0.3, xmax=14.7,
+      ylabel={#2}, ytick={0,0.25,0.5,0.75,1}, xtick=data, xticklabels from table={#1}{state},
+      table/col sep=comma, xticklabel style={rotate=35, anchor=north east, font=\scriptsize, inner sep=1pt},
+      tick label style={font=\footnotesize}, label style={font=\small}, title={#3}, title style={font=\small,
+      yshift=8pt}, clip=false, legend style={font=\scriptsize, at={(0.5,-0.42)}, anchor=north, legend columns=4,
+      draw=none, /tikz/every even column/.append style={column sep=6pt}}, legend cell align=left,
+      ytick style={draw=none}, xtick style={draw=none}, ymajorgrids, grid style={cGray!25}]
+      \addplot[draw=none, forget plot] table[x=pos, y expr=0] {#1};% the ticks (xtick=data)
+      \namedbar{lvA}{lb12}{-0.325}\addlegendentry{LB $(1,2)$}
+      \namedbar{lvB}{lb13}{-0.195}\addlegendentry{LB $(1,3)$}
+      \namedbar{lvC}{lb22}{-0.065}\addlegendentry{LB $(2,2)$}
+      \namedbar{lvD}{lb23}{0.065}\addlegendentry{LB $(2,3)$}
+      \namedbar{lvE}{lb33}{0.195}\addlegendentry{LB $(3,3)$}
+      \namedbar{lvF}{lb24}{0.325}\addlegendentry{LB $(2,4)$}
+      \addplot[only marks, mark=diamond*, mark size=2.2pt, cB, mark options={draw=white, line width=0.4pt}]
+        table[x expr=\thisrow{pos}-0.14, y expr=\thisrow{ub_extract}/\thisrow{ref}] {#1};
+      \addlegendentry{UB: extracted ($k=m=3$)}
+      \addplot[only marks, mark=x, mark size=2.4pt, black, thick]
+        table[x expr=\thisrow{pos}+0.14, y expr=\thisrow{ub_hjw}/\thisrow{ref}] {#1};
+      \addlegendentry{UB: HJW}
+      \addplot[only marks, mark=none, nodes near coords={$\pgfplotspointmeta$}, point meta=explicit symbolic,
+        nodes near coords style={anchor=south, font=\tiny, inner sep=1pt}, forget plot]
+        table[x=pos, y=label_y, meta=ref_label] {#1};
+      \draw[cGray] (axis cs:0.3,1) -- (axis cs:14.7,1);
+      \draw[cGray, densely dashed] (axis cs:10,0) -- (axis cs:10,1.38);
+      \node[font=\scriptsize, anchor=south] at (axis cs:5,1.38) {PPT (bound entangled)};
+      \node[font=\scriptsize, anchor=south] at (axis cs:12.5,1.38) {NPT};
+    \end{axis}
+  \end{tikzpicture}}

@@ -32,7 +32,7 @@ the variable and restores strict feasibility (the reduced marginal is full rank)
 import math
 import warnings
 from contextlib import contextmanager
-from typing import Literal, NamedTuple
+from typing import Iterable, Literal, NamedTuple
 
 import numpy as np
 import qics
@@ -79,6 +79,7 @@ def polynomialConvexRoof(
     mode: Literal["min"] | Literal["max"] = "min",
     rank_tol: float | None = 1e-10,
     eliminate_permutations: bool = True,
+    ppt: Literal["copies", "extras", "alice", "none"] | Iterable[tuple[int, int]] = "copies",
     verbose: int = 0,
     **qics_opts,
 ) -> ConvexRoofResult:
@@ -114,11 +115,17 @@ def polynomialConvexRoof(
         their null space (fewer variables), or pass them to the solver as equality constraints. The null-space
         basis can fill in the cone constraints almost completely (at (k, m) = (2, 4): 2e9 nonzeros for the Piani
         state instead of 1e6), so for large problems False needs far less memory.
+    ppt : which partial transposes to impose. "copies": Phi^{T_S} >= 0 for every cut S of the k AB copies and the
+        m-k extras (the default). "alice": only (tr_B Phi)^{T_t} >= 0 on t of the m Alice copies, 1 <= t <= m/2;
+        implied by "copies" (tr_B Phi^{T_S} = (tr_B Phi)^{T_S}), so a weaker bound, but much smaller cones.
+        "extras": only the cuts of "copies" that transpose no AB copy (no Sym^l ot Sym^{k-l} split, so smaller cones).
+        "none": Phi >= 0 only. Or a collection of cuts (l, j) (transpose l of the AB copies and j of the extras; a cut
+        and its complement (k-l, m-k-j) are the same constraint): only those, besides Phi >= 0.
     verbose : QICS verbosity (0 to 3).
     **qics_opts : passed to ``qics.Solver`` (e.g. max_iter, tol_gap, tol_feas, max_time).
     """
     sdp = _ConvexRoofSDP(rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol,
-                         eliminate_permutations)
+                         eliminate_permutations, ppt)
     info = sdp.solve(verbose=verbose, **qics_opts)
     value, W = info["p_obj"], sdp.witness(info["y_opt"])
     if mode == "max":
@@ -137,7 +144,7 @@ class _ConvexRoofSDP:
     """
 
     def __init__(self, rho, observable, dims, full_state_registers, alice_copies, mode, rank_tol,
-                 eliminate_permutations=True):
+                 eliminate_permutations=True, ppt="copies"):
         dA, dB = dims
         D = dA * dB
         k = full_state_registers
@@ -147,6 +154,7 @@ class _ConvexRoofSDP:
             raise ValueError("full_state_registers must be at least 1.")
         if mode not in ("min", "max"):
             raise ValueError(f"mode must be 'min' or 'max', got {mode!r}.")
+        cuts = _selected_cuts(ppt, k, e)
 
         rho = np.asarray(rho)
         if rho.shape != (D, D):
@@ -228,7 +236,7 @@ class _ConvexRoofSDP:
 
         # Cones: Phi >= 0 and one partial transpose per orbit of cuts, each split into Schur blocks.
         G_blocks, cones = [], []
-        for M_cut, dims_cut, transposed, j in _cuts(k, e, D, dA, S, E):
+        for M_cut, dims_cut, transposed, j in _cuts(k, e, D, dA, S, E, cuts):
             L = congruence_map(M_cut)[partial_transpose_perm(dims_cut, transposed)] @ param.M
             outer = math.prod(dims_cut[:-2])
             for C in _schur_compressions(outer, dA, j, e - j):
@@ -237,6 +245,20 @@ class _ConvexRoofSDP:
                 block.eliminate_zeros()
                 G_blocks.append(_to_qics_rows(block, real))
                 cones.append(qics.cones.PosSemidefinite(C.shape[1], iscomplex=not real))
+        if ppt == "alice":
+            # X = tr_B Phi is S_m invariant, so X^{T_t} >= 0 for the first t Alice copies, 1 <= t <= m/2, covers all cuts;
+            # X^{T_t} is S_t x S_{m-t} invariant and splits into Schur blocks.
+            Mdim = dA**m
+            P, Q = np.divmod(np.arange(Mdim * Mdim, dtype=np.int64), Mdim)
+            X_map = marginal.entries(P, Q, np.ones(len(P))) @ param.M
+            for t in range(1, m // 2 + 1):
+                L = X_map[partial_transpose_perm([dA**t, dA ** (m - t)], [0])]
+                for C in _schur_compressions(1, dA, t, m - t):
+                    block = (congruence_map(C.T.tocsr()) @ L).tocsr()
+                    block.data[np.abs(block.data) < 1e-13] = 0
+                    block.eliminate_zeros()
+                    G_blocks.append(_to_qics_rows(block, real))
+                    cones.append(qics.cones.PosSemidefinite(C.shape[1], iscomplex=not real))
         G = -sp.vstack(G_blocks, format="csr")
 
         self.dims, self.k, self.e, self.D, self.S, self.E, self.N = dims, k, e, D, S, E, N
@@ -448,16 +470,32 @@ def _trace_extras(mapk: sp.csr_matrix, S: int, E: int) -> sp.csr_matrix:
     return sp.csr_matrix((vals, (rows, cols)), shape=(mapk.shape[0], N * N))
 
 
-def _cuts(k: int, e: int, D: int, dA: int, S: int, E: int):
+def _selected_cuts(ppt, k: int, e: int) -> list[tuple[int, int]]:
+    """The cuts (l, j) imposed besides Phi >= 0 for the ``ppt`` option, one representative (min of the cut and its
+    complement) per orbit, sorted."""
+    reps = sorted({min((l, j), (k - l, e - j)) for l in range(k + 1) for j in range(e + 1)} - {(0, 0)})
+    if isinstance(ppt, str):
+        if ppt not in ("copies", "extras", "alice", "none"):
+            raise ValueError(f"ppt must be 'copies', 'extras', 'alice', 'none' or a list of cuts, got {ppt!r}.")
+        return {"copies": reps, "extras": [(l, j) for l, j in reps if l == 0]}.get(ppt, [])
+    chosen = set()
+    for l, j in ppt:
+        if not (0 <= l <= k and 0 <= j <= e) or (l, j) in ((0, 0), (k, e)):
+            raise ValueError(f"cut {(l, j)} is not a proper cut of {k} AB copies and {e} extra copies.")
+        chosen.add(min((l, j), (k - l, e - j)))
+    return sorted(chosen)
+
+
+def _cuts(k: int, e: int, D: int, dA: int, S: int, E: int, cuts: list[tuple[int, int]]):
     """Phi itself and one partial transpose per orbit of cuts (l of the k AB copies, j of the e extras).
 
     Cuts (l, j) and (k-l, e-j) are equivalent (full transposition preserves positivity), and so are
     all cuts with the same (l, j) by the S_k x S_e symmetry of Phi. Yields (M, dims, transposed, j)
     for the constraint (M Phi M^T)^{T_transposed} >= 0, where the last two entries of dims are the
-    j transposed and the e-j untransposed extra copies. (l, j) = (0, 0) is Phi >= 0 itself.
+    j transposed and the e-j untransposed extra copies. (l, j) = (0, 0) is Phi >= 0 itself, always yielded first,
+    followed by ``cuts`` (representatives as returned by ``_selected_cuts``).
     """
-    reps = sorted({min((l, j), (k - l, e - j)) for l in range(k + 1) for j in range(e + 1)})
-    for l, j in reps:
+    for l, j in [(0, 0)] + list(cuts):
         if l == 0:
             yield sp.eye(S * E, format="csr"), [S, dA**j, dA ** (e - j)], [1] if j > 0 else [], j
         else:

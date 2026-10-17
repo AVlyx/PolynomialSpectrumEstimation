@@ -96,14 +96,14 @@
 \begin{document}
 \title{
 % Generic convex roof bounds and LOCC transformations
-Generic convex roof bounds and LOCC transformations
+Entanglement of formation and LOCC conversion from Schur-Weyl duality
 }
 
 \author{
-Albert Rico
+Authors
 %$^1$$^{\orcidlink{0000-0001-8211-499X}}$
 }
-\author{Anton Van Cleemput}
+%\author{}
 \affiliation{Naturwissenschaftlich-Technische Fakult\"{a}t, Universit\"{a}t Siegen, Walter-Flex-Stra\ss e 3, 57068 Siegen, Germany}
 
 
@@ -116,18 +116,24 @@ We introduce a method to optimize entanglement spectrum functions over mixed-sta
 
 \maketitle
 \section{Introduction}
-Composite quantum systems are entangled when they are not described solely by their parts~\cite{epr}. In isolated quantum systems, described by pure states, this effect is completely characterized by the spectrum of the marginals~\cite{Nielsen1999MajLOCC}, that is, the populations of the eigenstates of the subsystems. Therefore, learning such spectra is essential to understand the entanglement of the system.
+Composite quantum systems are entangled when they can not be described solely by their parts~\cite{epr}. Operationally, entanglement is a resource for quantum communication~\cite{one-way, distributed, shor} and communication~\cite{eckert} that cannot increase under local operations and classical communications (LOCC) between distant parties \albert{cite main}. In isolated quantum systems, described by pure states, entanglement and LOCC transformations are completely characterized by the spectrum of the marginals~\cite{Nielsen1999MajLOCC}, that is, the populations of the eigenstates of the subsystems. Therefore, learning such spectra is necessary and sufficient to understand the entanglement of the system and the possible entanglement transformations between states \albert{nielsen thm}.
 
-In practice, pure states become mixed due to decoherence with the environment. When this occurs, the spectrum of the marginals alone is not informative of the entanglement between them. This is because a mixed state admits multiple descriptions as probabilistic ensembles, and one needs to account for all such decompositions. This leads to an intractable optimization required to evaluate entanglement measures, even when full tomography is available. Existing methods address specific entanglement measures one at a time. Here we aim to create a generic method of bounding entanglement measures in quantum states.
-We build on the work of Ref.~\cite{Toth2015CroofTP}, which relaxes the set of states $\omega_k = \sum_i p_i \dyad{\psi_i}^{\otimes k}$ to obtain SDP lower bounds on the convex roof of the linear entropy, the Schmidt number and the three-tangle. We extend their work in several directions:
-\begin{itemize}
-    \item We bound the convex roof of arbitrary symmetric polynomials of the entanglement spectrum via the Schur basis and isotypic projectors.
-    \item We prove convergence of the hierarchy using the quantum de Finetti theorem.
-    \item We reduce the cost of the SDP by reducing it to the symmetric subspace of the support of $\rho$ and optimizing over real variables when the state is real.
-    \item We introduce a cheaper hierarchy, which we use to compute bounds in larger systems.
-    \item We embed an LP to bound non-polynomial measures such as the entanglement of formation and Vidal's monotones, and to check LOCC convertibility.
-    \item We show how to extract decompositions from the result of the SDP, which give upper bounds in the general case and certificates of convertibility in the LOCC problem, complementing the certificates of non-convertibility given by the SDP.
-\end{itemize}
+In practice, pure states become mixed due to decoherence with the environment \albert{cite Watrous? open qsyst? Nielsen Chuang?}. When this occurs, the spectrum of the marginals alone is not informative of the entanglement between them, because a mixed state admits multiple descriptions as probabilistic ensembles. Instead, one needs to account for all such decompositions. This leads to an intractable optimization required to evaluate entanglement measures, even when full tomography is available \albert{cite standard refs on convex roof}. Existing methods address each specific entanglement measures independently \albert{cite main}. Moreover, while lower bounds can be found for polynomial measures~\cite{Toth2015CroofTP}, much less is known for the more general case \albert{cite something supporting the claim}. As a result, it is still a remarkable challenge to determine when entanglement transformations are possible with LOCC \albert{cite main}.
+
+Here we aim to provide a systematic method to learn the entanglement properties of a mixed bipartite quantum state. To this end we use the Schur-Weyl decomposition of the Hilbert space, which allows to learn entanglement spectra of pure states, to estimate any polynomial entanglement measure for mixed states with a complete polynomial basis. This basis is particularly suited to detect entanglement dimensionality. We find upper and lower converging bounds, which determine the amount of entanglement of the main families of bound entangled states. Using semidefinite and linear programming, we extend them to a convergent hierarchy to find any possible entanglement measure of mixed states. This allows us to determine the entanglement of formation, which up to date was an open problem \albert{cite sources saying it. Also make sure it was}. The combination of these bounds leads to an asymptotically complete criterion to determine when LOCC transformations from pure to mixed states are possible, which was an open problem to the best of our knowledge. 
+
+\iffalse 
+
+    We build on the work of Ref.~\cite{Toth2015CroofTP}, which relaxes the set of states $\omega_k = \sum_i p_i \dyad{\psi_i}^{\otimes k}$ to obtain SDP lower bounds on the convex roof of the linear entropy, the Schmidt number and the three-tangle. We extend their work in several directions:
+    \begin{itemize}
+        \item We bound the convex roof of arbitrary symmetric polynomials of the entanglement spectrum via the Schur basis and isotypic projectors.
+        \item We prove convergence of the hierarchy using the quantum de Finetti theorem.
+        \item We reduce the cost of the SDP by reducing it to the symmetric subspace of the support of $\rho$ and optimizing over real variables when the state is real.
+        \item We introduce a cheaper hierarchy, which we use to compute bounds in larger systems.
+        \item We embed an LP to bound non-polynomial measures such as the entanglement of formation and Vidal's monotones, and to check LOCC convertibility.
+        \item We show how to extract decompositions from the result of the SDP, which give upper bounds in the general case and certificates of convertibility in the LOCC problem, complementing the certificates of non-convertibility given by the SDP.
+    \end{itemize}
+\fi
 
 \section{Entanglement spectrum}
 
@@ -269,8 +275,11 @@ Then we can lower bound $\widehat{P}(\rho)$ as $P_{{\rm LB}_{k,m}}\leq \widehat{
 Here $O_P^A$ is the observable of Eq.~\eqref{eq:OP} for a polynomial of degree $m$, acting on $A_1,\dots,A_m$. Since $\Phi_{k,m}$ can be assumed invariant under permutations of $A_1B_1, \dots, A_kB_k$ and $A_{k+1}, \dots, A_m$, it suffices to impose partial transpose conditions on the tuples $(i, j)$ where each tuple means take the partial transpose on the first $i$ full-copy registers and the first $j$ marginal registers. One such set of representatives is $\{(i,j):0\leq i\leq k,\ 0\leq j<\tfrac{m-k}{2}\}\ \cup\ \{(i,\tfrac{m-k}{2}):0\leq i\leq\lfloor k/2\rfloor\}$ where the second set is only present for even $m-k$ and the tuple $(0,0)$ is excluded. 
 For $k\geq\deg P$, the marginal $\Phi_k$ of any feasible $\Phi_{k,m}$ is feasible for Eq.~\eqref{eq:SDPcroof1} at level $k$, so that $P_{{\rm LB}_k}\leq P_{{\rm LB}_{k,m}}$ and this hierarchy is also complete in $k$.
 
+The simplified relaxation is not always cheaper than the full one at the same degree $m$. After the symmetry reductions of Appendix~\ref{app:SymRed}, the size of both SDPs only depends on $r=\operatorname{rank}\rho$, on $r_A=\operatorname{rank}\rho_A$ and on the level: the $k$ full copies live on $\text{Sym}^k(\operatorname{supp}\rho)$, of dimension $\binom{k+r-1}{k}$, and each marginal copy multiplies this dimension by $r_A$, so that $\Phi_{k,m}$ has side $\binom{k+r-1}{k}r_A^{m-k}$. Turning the marginal copy $A_{k+1}$ into a full copy multiplies this side by $\frac{k+r}{(k+1)r_A}$: the full copy is cheaper whenever $r<(k+1)r_A-k$, which is the case for low-rank states. Fig.~\ref{fig:memory} shows the resulting memory: the simplified relaxation saves memory for states of high rank, but for low-rank states the full hierarchy is cheaper at the same degree $m$.
+
 \anton{change table dimensions figure}
 % \input{figures/tab_dimensions}
+\input{figures/fig_memory}
 
 \section{Approximating the optimal decomposition}\label{sec:extractingTheDecomposition}
 Our next goal is to extract the decomposition $\{p_i, \ket{\psi_i}\}$ from the optimal solution $\Omega_k$ found in the SDP. This will provide us control of how tight our estimates are. Notice that if the relaxation is tight, we have $\Omega_k = \omega_k$. This is in general not the case, and therefore we write $\Omega_k = \omega_k + \Delta$, where $\Delta$ accounts for the gap of the relaxation and solver noise.
@@ -285,7 +294,6 @@ This is a decomposition of the state $\sigma = \sum_j p_j \dyad{\psi_j}$, which 
 \end{equation}
 where $\sigma^{-1/2}$ is taken on the support of $\sigma$. If $\operatorname{supp} \rho \subseteq \operatorname{supp} \sigma$, then $\sum_j \dyad{\varphi_j} = \rho^{1/2}\Pi_\sigma\rho^{1/2} = \rho$, with $\Pi_\sigma$ the projector onto the support of $\sigma$. Hence $\{q_j,\ket{\phi_j}\}$ with $q_j = \|\varphi_j\|^2$ and $\ket{\phi_j}=\ket{\varphi_j}/\|\varphi_j\|$ is a decomposition of $\rho$ and gives a valid upper bound on the convex roof.
 
-Figure~\ref{fig:linearEntropy} shows the lower bounds on the convex roof of the linear entropy for a family of $2\times4$ bound entangled states, together with the upper bounds obtained from the extracted decomposition.
 In practice, we found that gradient descent over ensemble decompositions, parametrized via the HJW theorem~\cite{HJW}, usually performs better when it comes to extracting the upper bound. However, the tensor extraction method remains useful in cases where an upper bound cannot be extracted otherwise, such as the LOCC convertibility problem we define later.
 
 \input{figures/fig_linear_entropy}
@@ -311,7 +319,7 @@ This grid procedure tolerates a small error $\epsilon$, where the polynomial mig
 
     With a finite grid, $F_{{\rm LB}_{k,m}}(\rho)-\epsilon\leq\widehat F(\rho)$, where $\epsilon=\max_\a\left(P^*(\a)-F(\a)\right)$ is the grid error of the polynomial $P^*$ returned by the solver.
 \end{theorem}
-The proof is given in Appendix~\ref{app:LPconvergence}. Figure~\ref{fig:EoF} shows the resulting lower bounds on the entanglement of formation for a set of PPT and NPT entangled states.
+The proof is given in Appendix~\ref{app:LPconvergence}.
 
 \input{figures/fig_EoF}
 
@@ -333,11 +341,10 @@ Since all the inequalities must hold for the same decomposition, we combine the 
 The optimal value $s_{k,m}$ is the smallest worst-case violation of Eq.~\eqref{eq:JPcriterion} over the relaxed set of decompositions. The dual variables of this SDP provide weights $t_j^*\geq0$ with $\sum_jt^*_j=1$ and polynomials $Q_j^*$ satisfying $Q^*_j\leq t^*_jE_j$ on the grid (Appendix~\ref{app:LOCC}).
 \begin{theorem}\label{thm:LOCC}
     Let $\epsilon_j=\max_\a\left(Q^*_j(\a)-t^*_jE_j(\a)\right)$ be the grid errors of the polynomials returned by the solver.
-    If $s_{k,m}>\sum_j\epsilon_j$ for some $(k,m)$, then $\ket{\psi}$ cannot be converted into $\rho$ by LOCC.
+    If $s_{k,m}>\sum_j\epsilon_j$ for some $(k,m)$, then $\ket{\psi}$ cannot be converted into $\rho$ by LOCC. The proof is given in Appendix~\ref{app:LOCC}
 \end{theorem}
-The proof is given in Appendix~\ref{app:LOCC}.
 
-For $k\geq 3$, the extraction procedure from Section~\ref{sec:extractingTheDecomposition} also allows us to get a certificate that a state is convertible via LOCC when the decomposition satisfies Eq.~\eqref{eq:JPcriterion}. Figure~\ref{fig:locc} shows both certificates for a family of two-qutrit target states.
+For $k\geq 3$, the extraction procedure from Section~\ref{sec:extractingTheDecomposition} also allows us to get a certificate that a state is convertible via LOCC when the decomposition satisfies Eq.~\eqref{eq:JPcriterion}.
 
 \input{figures/fig_locc}
 
@@ -351,6 +358,7 @@ In the constraints of our SDP we might not want to optimize over a state $\rho$ 
 \section{Conclusions}
 Using spectral estimation techniques and semidefinite programming, we have introduced a method to estimate any entanglement measure for mixed states. We do so by approximating any measure over mixed-state decompositions by a polynomial lower bound. This formulation allows us to obtain tight bounds for polynomial and non-polynomial measures for both PPT and NPT entangled states in a complete hierarchy. In turn, we demonstrate it to be a strong and robust method to detect entanglement. This method also allows us to address the problem of systematically certifying LOCC convertibility from pure to mixed states, with a hierarchy of certificates of convertibility and non-convertibility. At low levels, this already allows us to determine convertibility for a large set of qutrit-qutrit state pairs. Due to the results of Ref.~\cite{Toth2015CroofTP}, the method can also be used in an experiment friendly setting by using expectation value constraints on the first marginal of the SDP.
 
+{\em AI statement}. This article was entirely written by humans (the authors). The numerics, plots and the following steps were assisted by Claude: \albert{List exactly the equations that were derived by Claude}.
 
 {\em Acknowledgements.}
 AR acknowledges support
@@ -594,8 +602,7 @@ We also show how the LP adapts to different states by choosing different lower-b
 
 \section{Numerical implementation}\label{app:numerics}
 All the SDPs are solved with the interior-point conic solver QICS~\cite{qics}.
-The PPT entangled states of Figs.~\ref{fig:linearEntropy}, \ref{fig:EoF}, \ref{fig:namedLinearEntropy} and~\ref{fig:Vidal} (Tiles UPB, Pyramid UPB, GenTiles2 UPB, Chessboard, Cross-hatch, Rank-4 PPT, Horodecki $3\times3$ and $2\times4$, Piani $4\times4$) are constructed with the Python library \texttt{bound-entangled}~\cite{boundEntangled}, which collects these families together with their definitions and references to the original works. For the Horodecki $3\times3$ and $2\times4$ states we take the parameter $a=0.5$ in Figs.~\ref{fig:EoF}, \ref{fig:namedLinearEntropy} and~\ref{fig:Vidal}.
-The Gisin state is constructed and the PPT property of all states is verified with \texttt{toqito}~\cite{toqito}. The parameters of the NPT states are the ones given in the caption of Fig.~\ref{fig:polynomials}.
+The PPT entangled states from the figures come from the library \texttt{bound-entangled}~\cite{boundEntangled} and the NPT ones are built with \texttt{toqito}~\cite{toqito}. For the Horodecki $3\times3$ and $2\times4$ states we take the parameter $a=0.5$ in Figs.~\ref{fig:EoF}, \ref{fig:namedLinearEntropy} and~\ref{fig:Vidal}. The parameters of the NPT states are the ones given in the caption of Fig.~\ref{fig:polynomials}.
 
 
 

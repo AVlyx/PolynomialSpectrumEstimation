@@ -59,6 +59,7 @@ def nonPolynomialConvexRoof(
     *,
     rank_tol: float | None = 1e-10,
     eliminate_permutations: bool = True,
+    ppt="copies",
     tol: float = 1e-9,
     max_iter: int = 50,
     samples: int = 20000,
@@ -73,7 +74,7 @@ def nonPolynomialConvexRoof(
 
     Parameters
     ----------
-    rho, dims, full_state_registers, alice_copies, rank_tol, eliminate_permutations, verbose, **qics_opts :
+    rho, dims, full_state_registers, alice_copies, rank_tol, eliminate_permutations, ppt, verbose, **qics_opts :
         as in ``polynomialConvexRoof``.
     f : symmetric concave function of the spectrum x (a 1-d array of length dA on the simplex, possibly with zeros).
     degree : degree n of g, at most max(k, m). Defaults to max(k, m), all the Alice copies.
@@ -95,7 +96,8 @@ def nonPolynomialConvexRoof(
     if not cls.mus:
         raise ValueError("f vanishes at the center of the simplex, so (concave and >= 0) it vanishes everywhere.")
     observables = [monomial_observable({mu: 1.0}, dA) for mu in cls.mus]
-    sdp = _ConvexRoofSDP(rho, observables[0], dims, full_state_registers, m, "min", rank_tol, eliminate_permutations)
+    sdp = _ConvexRoofSDP(rho, observables[0], dims, full_state_registers, m, "min", rank_tol, eliminate_permutations,
+                         ppt)
     moments = sp.csr_matrix(np.hstack([sdp.observable_objective(O) for O in observables]).T)  # (mus x z)
 
     points, fvals = cls.points, cls.fvals

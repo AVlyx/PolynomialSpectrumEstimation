@@ -1,0 +1,47 @@
+\input{figures/style}%
+% \memcurve{column}{color}{mark}{legend}: one curve of memory.csv, broken between the groups of levels of equal degree m
+% (pos 1-2: m = 2, pos 4-6: m = 3, pos 8-11: m = 4).
+\providecommand{\memcurve}[4]{%
+  \addplot[#2, thick, mark=#3, mark size=1.8pt, restrict x to domain=0:2.5] table[x=pos, y=#1] {\memfile};
+  \addlegendentry{#4}
+  \addplot[#2, thick, mark=#3, mark size=1.8pt, restrict x to domain=3.5:6.5, forget plot] table[x=pos, y=#1] {\memfile};
+  \addplot[#2, thick, mark=#3, mark size=1.8pt, restrict x to domain=7.5:11.5, forget plot] table[x=pos, y=#1] {\memfile};}%
+\providecommand{\fulllevel}[1]{\fill[cGray!15] (axis cs:#1-0.4,1e3) rectangle (axis cs:#1+0.4,1e16);}%
+\begin{figure}
+  \centering
+  \def\memfile{figures/data/memory.csv}%
+  \begin{tikzpicture}
+    \begin{axis}[width=\columnwidth, height=0.8\columnwidth, ymode=log, ymin=1e3, ymax=1e16, xmin=0.4, xmax=11.6,
+      xtick=data, xticklabels from table={figures/data/memory.csv}{level}, xlabel={level $(k,m)$},
+      ytick={1e3,1e6,1e9,1e12,1e15}, yticklabels={1\,kB,1\,MB,1\,GB,1\,TB,1\,PB}, ylabel={memory},
+      xticklabel style={rotate=45, anchor=north east, font=\scriptsize, inner sep=1pt},
+      tick label style={font=\footnotesize}, label style={font=\small}, xtick style={draw=none},
+      ymajorgrids, grid style={cGray!25}, clip=false, table/col sep=comma,
+      legend style={font=\scriptsize, at={(0.5,-0.3)}, anchor=north, draw=none, legend columns=2,
+      /tikz/every even column/.append style={column sep=4pt}}, legend cell align=left]
+      \fulllevel{2}\fulllevel{6}\fulllevel{11}
+      \addplot[draw=none, forget plot] table[x=pos, y expr=1e9] {\memfile};% the ticks (xtick=data)
+      \draw[black, densely dashed] (axis cs:0.4,1.6e10) -- (axis cs:11.6,1.6e10)
+        node[pos=0, anchor=south west, font=\scriptsize, inner sep=1pt] {16\,GB};
+      \memcurve{mem_r4a2}{cA}{*}{$r=4$, $r_A=2$}
+      \memcurve{mem_r4a3}{cB}{square*}{$r=4$, $r_A=3$}
+      \memcurve{mem_r9a3}{cC}{triangle*}{$r=9$, $r_A=3$}
+      \memcurve{mem_r4a4}{cD}{diamond*}{$r=4$, $r_A=4$}
+      \memcurve{mem_r8a4}{cE}{pentagon*}{$r=8$, $r_A=4$}
+      \memcurve{mem_r16a4}{cF}{star}{$r=16$, $r_A=4$}
+      \node[font=\scriptsize, anchor=south] at (axis cs:1.5,1e16) {$m=2$};
+      \node[font=\scriptsize, anchor=south] at (axis cs:5,1e16) {$m=3$};
+      \node[font=\scriptsize, anchor=south] at (axis cs:9.5,1e16) {$m=4$};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Memory needed by an interior-point solver for the bound at each level $(k,m)$, as a function of
+  $r=\operatorname{rank}\rho$ and $r_A=\operatorname{rank}\rho_A$, for the full hierarchy [$k=m$, shaded,
+  Eq.~\eqref{eq:SDPcroof1}] and the simplified one [$k<m$, Eq.~\eqref{eq:marginals_SDP}]. After the reductions of
+  Appendix~\ref{app:SymRed}, the SDP only depends on $r$, $r_A$ and $(k,m)$; we count its number $n$ of free real
+  variables (after eliminating the permutation-invariance equalities) and show the size $8n^2$ bytes of the dense
+  Schur complement matrix, which dominates the memory of the solver for large problems. At equal degree $m$, the
+  simplified levels with $k\geq2$ are cheaper than the full level only for states of high rank ($r=9$, $r_A=3$ and
+  $r=16$, $r_A=4$); for low-rank states ($r=4$, $r_A=3$ and $r=8$, $r_A=4$) the full level $(m,m)$ needs less memory,
+  since then $r<(k+1)r_A-k$ and a full copy costs less than a marginal copy. Dashed: the 16\,GB of a laptop.}
+  \label{fig:memory}
+\end{figure}

@@ -1,0 +1,13 @@
+{
+  "_note": "Results not in experiments/results/: level (2,4) of Horodecki 3x3 and Piani 4x4, solved alone on a 16 GB Apple M4 laptop with eliminate_permutations=False. Values recovered from the published figures (6 significant digits); times of the S_L SDPs in seconds. make_figures.py merges these entries into named_<key>.json.",
+  "horodecki33": {
+    "SL/lower/2,4": {"value": 0.000977584, "time": 248},
+    "EF/lower/2,4": {"value": 0.00302355},
+    "E1/lower/2,4": {"value": 0.000489032}
+  },
+  "piani": {
+    "SL/lower/2,4": {"value": 0.407529, "time": 1020},
+    "EF/lower/2,4": {"value": 0.969691},
+    "E1/lower/2,4": {"value": 0.244367}
+  }
+}
