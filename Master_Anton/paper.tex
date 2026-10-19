@@ -110,19 +110,20 @@ Authors
 
 \date{\today}
 \begin{abstract}
-We introduce a method to optimize entanglement spectrum functions over mixed-state decompositions. As a result, we estimate any polynomial entanglement measure of bipartite mixed states with high accuracy. For this we formulate a semidefinite programming hierarchy of convergent optimizations over entanglement spectra using a natural polynomial basis, which also allows us to detect entanglement dimension. We extend the optimization to non-polynomial measures such as the entanglement of formation with linear programming. Then, we assess the tightness of the bounds by extracting decompositions into pure states from the optimal SDP solution. As a benchmark, we obtain accurate estimates for families of two-qutrit bound entangled states. Moreover, extracting the decomposition allows us to formulate new criteria to determine entanglement transformations. In particular, we provide a hierarchy of certificates of LOCC convertibility and non-convertibility from pure to mixed states in any dimension.
-
+We introduce a method to optimize entanglement spectrum functions over mixed-state decompositions. As a result, we estimate any polynomial entanglement measure of bipartite mixed states with high accuracy. For this we formulate a semidefinite programming hierarchy of convergent optimizations over entanglement spectra using a natural polynomial basis, which also allows us to detect entanglement dimension. We extend the optimization to non-polynomial measures such as the entanglement of formation with linear programming. Then, we assess the tightness of the bounds by extracting decompositions into pure states from the optimal SDP solution. As a benchmark, we obtain estimates for families of bound entangled states. Moreover, extracting the decomposition allows us to formulate new criteria to determine entanglement transformations. In particular, we provide a hierarchy of certificates of LOCC non-convertibility from pure to mixed states in any dimension and a heuristic approach for LOCC convertibility.
 \end{abstract}
 
 \maketitle
 \section{Introduction}
-Composite quantum systems are entangled when they can not be described solely by their parts~\cite{epr}. Operationally, entanglement is a resource for quantum communication~\cite{one-way, distributed, shor} and communication~\cite{eckert} that cannot increase under local operations and classical communications (LOCC) between distant parties \albert{cite main}. In isolated quantum systems, described by pure states, entanglement and LOCC transformations are completely characterized by the spectrum of the marginals~\cite{Nielsen1999MajLOCC}, that is, the populations of the eigenstates of the subsystems. Therefore, learning such spectra is necessary and sufficient to understand the entanglement of the system and the possible entanglement transformations between states \albert{nielsen thm}.
+Composite quantum systems are entangled when they can not be described solely by their parts~\cite{epr}. Operationally, entanglement is a resource for quantum communication~\cite{one-way, distributed, shor} and computation~\cite{eckert} that cannot increase under local operations and classical communications (LOCC) between distant parties.
+In isolated quantum systems, described by pure states, entanglement and LOCC transformations are completely characterized by the spectrum of the marginals~\cite{Nielsen1999MajLOCC}, that is, the populations of the eigenstates of the subsystems. Therefore, learning such spectra is necessary and sufficient to understand the entanglement of the system and the possible entanglement transformations between states.
 
 In practice, pure states become mixed due to decoherence with the environment \albert{cite Watrous? open qsyst? Nielsen Chuang?}. When this occurs, the spectrum of the marginals alone is not informative of the entanglement between them, because a mixed state admits multiple descriptions as probabilistic ensembles. Instead, one needs to account for all such decompositions. This leads to an intractable optimization required to evaluate entanglement measures, even when full tomography is available \albert{cite standard refs on convex roof}. Existing methods address each specific entanglement measures independently \albert{cite main}. Moreover, while lower bounds can be found for polynomial measures~\cite{Toth2015CroofTP}, much less is known for the more general case \albert{cite something supporting the claim}. As a result, it is still a remarkable challenge to determine when entanglement transformations are possible with LOCC \albert{cite main}.
 
-Here we aim to provide a systematic method to learn the entanglement properties of a mixed bipartite quantum state. To this end we use the Schur-Weyl decomposition of the Hilbert space, which allows to learn entanglement spectra of pure states, to estimate any polynomial entanglement measure for mixed states with a complete polynomial basis. This basis is particularly suited to detect entanglement dimensionality. We find upper and lower converging bounds, which determine the amount of entanglement of the main families of bound entangled states. Using semidefinite and linear programming, we extend them to a convergent hierarchy to find any possible entanglement measure of mixed states. This allows us to determine the entanglement of formation, which up to date was an open problem \albert{cite sources saying it. Also make sure it was}. The combination of these bounds leads to an asymptotically complete criterion to determine when LOCC transformations from pure to mixed states are possible, which was an open problem to the best of our knowledge. 
+Here we aim to provide a systematic method to learn the entanglement properties of a mixed bipartite quantum state. To this end we use the Schur-Weyl decomposition of the Hilbert space, which allows to learn entanglement spectra of pure states, to estimate any polynomial entanglement measure for mixed states with a complete polynomial basis. This basis is particularly suited to detect entanglement dimensionality. We find upper and lower converging bounds, which determine the amount of entanglement of the main families of bound entangled states. Using semidefinite and linear programming, we extend them to a convergent hierarchy to find any possible entanglement measure of mixed states. 
+This allows us to bound the entanglement of formation, which up to date was an open problem \albert{cite sources saying it. Also make sure it was}. The combination of these bounds leads us to a hierarchy of certificates to determine LOCC non-convertibility from pure to mixed and a heuristic approach towards convertibility.
 
-\iffalse 
+\iffalse
 
     We build on the work of Ref.~\cite{Toth2015CroofTP}, which relaxes the set of states $\omega_k = \sum_i p_i \dyad{\psi_i}^{\otimes k}$ to obtain SDP lower bounds on the convex roof of the linear entropy, the Schmidt number and the three-tangle. We extend their work in several directions:
     \begin{itemize}
@@ -150,7 +151,7 @@ as defined in Ref.~\cite{Vidal_1999}. Therefore, the quantities $E_j(\psi)$ form
 
 A pure-state entanglement measure $E$ can be extended to mixed states via the convex roof extension,
 \begin{equation}\label{eq:CRoof}
-    E(\rho) = \min_{\mathcal{D}(\rho)} \sum_i p_i E(\psi_i),
+    \widehat{E}(\rho) = \min_{\mathcal{D}(\rho)} \sum_i p_i E(\psi_i),
 \end{equation}
 where the minimization is taken over all decompositions
 $\mathcal{D}(\rho)=\{p_i,\ket{\psi_i}\}$ of $\rho$ such that $\rho = \sum_i p_i \dyad{\psi_i}$. However, this optimization is generally intractable, even if full tomography is available~\cite{gurvits2003classicaldeterministiccomplexityedmonds}.
@@ -219,7 +220,7 @@ where $\rho_{A,i}=\tr_B\dyad{\psi_i}$ and
 \begin{equation}\label{eq:OP}
     O_P = \sum_{\lambda \vdash k} \frac{c_\lambda}{f^\lambda} \Pi^\lambda
 \end{equation}
-for any tuple of coefficients $\vec{c}:=(c_{\lambda_1},\dots,c_{\lambda_t})$, where $t$ is the number of partitions of $k$. $\widehat{P}$ is an entanglement monotone only when $P$ is concave~\cite{Vidal_2000}. For any $P$, we always have unitary invariance since $P$ only depends on the spectrum.
+for any tuple of coefficients $\vec{c}:=(c_{\lambda_1},\dots,c_{\lambda_t})$, where $t$ is the number of partitions of $k$. $\widehat{P}$ is an entanglement monotone if $P$ is concave~\cite{Vidal_2000}. For any $P$, we always have unitary invariance since $P$ only depends on the spectrum.
 
 \section{Complete hierarchy for lower bounds}
 Given a bipartite mixed state $\rho_{AB}$ acting on $\C^{d_A} \otimes \C^{d_B}$, to any decomposition in $\mathcal{D}(\rho_{AB})$ we associate the state~\cite{Toth2015CroofTP}
@@ -254,11 +255,11 @@ Therefore, if $P_{{\rm LB}_k}\neq 0$ up to the solver precision, then no pure-st
 \begin{observation}
    If $P_{{\rm LB}_k}> 0$ is certified with numerical precision for $O_P=\Pi^\lambda$ with $\lambda\vdash k$, then $\rho$ has Schmidt number at least $\ell(\lambda)$.
 \end{observation}
-As a simple example, we test this Schmidt number hierarchy on the state $p \dyad{\phi^+} + (1-p)\dyad{01}$ acting on $\C^3 \otimes \C^3$, with $\ket{\phi^+}=\frac{1}{\sqrt3}\sum_{i=0}^{2}\ket{ii}$, studied in Ref.~\cite{Tavakoli_2024}, which has Schmidt number $3$ for $p > 0$, and we detect it at $p\approx 0.01$ at level $k=3$ with $\lambda = (1,1,1)$. It is easy to see that this state has Schmidt number 3, since every pure state in a decomposition lies in the span of $\ket{\phi^+}$ and $\ket{01}$, and any such vector with a nonzero component along $\ket{\phi^+}$ has Schmidt rank 3.
+As a simple example, we test this Schmidt number hierarchy on the state $p \dyad{\phi^+} + (1-p)\dyad{01}$ acting on $\C^3 \otimes \C^3$, with $\ket{\phi^+}=\frac{1}{\sqrt3}\sum_{i=0}^{2}\ket{ii}$, studied in Ref.~\cite{Tavakoli_2024}, which has Schmidt number $3$ for $p > 0$, and we detect it from $p\approx 0.01$ at level $k=3$ with $\lambda = (1,1,1)$. It is easy to see that this state has Schmidt number 3, since every pure state in a decomposition lies in the span of $\ket{\phi^+}$ and $\ket{01}$, and any such vector with a nonzero component along $\ket{\phi^+}$ has Schmidt rank 3.
 
 \section{Simplified relaxation}
 
-Notice that the isotypic projectors $\Pi^\lambda$ only act on Alice's subsystem copies. This leads us to ask whether the SDP can be simplified. In turn, here we present a simplification of the hierarchy above using a smaller variable that allows us to access larger systems, at the cost of weaker bounds at each level $P_{{\rm LB}_{k,m}} \leq P_{{\rm LB}_m}$ with $P_{{\rm LB}_{k,m}}$ defined in Eq.~\eqref{eq:marginals_SDP}. For $m > k$, define the following extension acting on $(\C^{d_A})^{\otimes m}\otimes(\C^{d_B})^{\otimes k}$ (i.e., $m$ copies of $A$ and $k$ copies of $B$),
+Notice that the isotypic projectors $\Pi^\lambda$ only act on Alice's subsystem copies. This leads us to ask whether the SDP can be simplified. In turn, here we present a simplification of the hierarchy above using a smaller variable that allows us to access larger systems, at the cost of weaker bounds at each level $P_{{\rm LB}_{k,m}} \leq P_{{\rm LB}_m}$ with $P_{{\rm LB}_{k,m}}$ defined in Eq.~\eqref{eq:marginals_SDP}. For $m \geq k$, define the following extension acting on $(\C^{d_A})^{\otimes m}\otimes(\C^{d_B})^{\otimes k}$ (i.e., $m$ copies of $A$ and $k$ copies of $B$),
 \begin{equation}
     \omega_{k,m} := \sum_i p_i \dyad{\psi_i}^{\otimes k}\otimes \rho_{A,i}^{\otimes (m-k)},
 \end{equation}
@@ -272,18 +273,14 @@ Then we can lower bound $\widehat{P}(\rho)$ as $P_{{\rm LB}_{k,m}}\leq \widehat{
     & \tr_{B_1,\dots,B_k}(\Phi_{k,m}) \text{ is permutation invariant},\nonumber\\
     & \Phi_{k,m}^{T_S} \succeq 0 \quad  \forall \, S.\nonumber
 \end{align}
-Here $O_P^A$ is the observable of Eq.~\eqref{eq:OP} for a polynomial of degree $m$, acting on $A_1,\dots,A_m$. Since $\Phi_{k,m}$ can be assumed invariant under permutations of $A_1B_1, \dots, A_kB_k$ and $A_{k+1}, \dots, A_m$, it suffices to impose partial transpose conditions on the tuples $(i, j)$ where each tuple means take the partial transpose on the first $i$ full-copy registers and the first $j$ marginal registers. One such set of representatives is $\{(i,j):0\leq i\leq k,\ 0\leq j<\tfrac{m-k}{2}\}\ \cup\ \{(i,\tfrac{m-k}{2}):0\leq i\leq\lfloor k/2\rfloor\}$ where the second set is only present for even $m-k$ and the tuple $(0,0)$ is excluded. 
+Here $O_P^A$ is the observable of Eq.~\eqref{eq:OP} for a polynomial of degree $m$, acting on $A_1,\dots,A_m$, and $T_S$ denotes the partial transpose on a set $S$ of registers, where transposing a full copy acts on both $A_i$ and $B_i$. Since $\Phi_{k,m}$ can be assumed invariant under permutations of $A_1B_1, \dots, A_kB_k$ and $A_{k+1}, \dots, A_m$, it suffices to impose partial transpose conditions on the tuples $(i, j)$ where each tuple means take the partial transpose on the first $i$ full-copy registers and the first $j$ marginal registers. One such set of representatives is $\{(i,j):0\leq i\leq k,\ 0\leq j<\tfrac{m-k}{2}\}\ \cup\ \{(i,\tfrac{m-k}{2}):0\leq i\leq\lfloor k/2\rfloor\}$ where the second set is only present for even $m-k$ and the tuple $(0,0)$ is excluded.
 For $k\geq\deg P$, the marginal $\Phi_k$ of any feasible $\Phi_{k,m}$ is feasible for Eq.~\eqref{eq:SDPcroof1} at level $k$, so that $P_{{\rm LB}_k}\leq P_{{\rm LB}_{k,m}}$ and this hierarchy is also complete in $k$.
 
-The simplified relaxation is not always cheaper than the full one at the same degree $m$. After the symmetry reductions of Appendix~\ref{app:SymRed}, the size of both SDPs only depends on $r=\operatorname{rank}\rho$, on $r_A=\operatorname{rank}\rho_A$ and on the level: the $k$ full copies live on $\text{Sym}^k(\operatorname{supp}\rho)$, of dimension $\binom{k+r-1}{k}$, and each marginal copy multiplies this dimension by $r_A$, so that $\Phi_{k,m}$ has side $\binom{k+r-1}{k}r_A^{m-k}$. Turning the marginal copy $A_{k+1}$ into a full copy multiplies this side by $\frac{k+r}{(k+1)r_A}$: the full copy is cheaper whenever $r<(k+1)r_A-k$, which is the case for low-rank states. Fig.~\ref{fig:memory} shows the resulting memory: the simplified relaxation saves memory for states of high rank, but for low-rank states the full hierarchy is cheaper at the same degree $m$.
-
-\anton{change table dimensions figure}
-% \input{figures/tab_dimensions}
-\input{figures/fig_memory}
+The simplified relaxation is equivalent to the full one for $k=m$. Also, it is not always cheaper than the full one at the same degree $m$. The simplified relaxation is useful when $\operatorname{rank}(\tr_B(\rho)) \ll \operatorname{rank}(\rho)$ (See Fig.~\ref{fig:memory}).
 
 \section{Approximating the optimal decomposition}\label{sec:extractingTheDecomposition}
 Our next goal is to extract the decomposition $\{p_i, \ket{\psi_i}\}$ from the optimal solution $\Omega_k$ found in the SDP. This will provide us control of how tight our estimates are. Notice that if the relaxation is tight, we have $\Omega_k = \omega_k$. This is in general not the case, and therefore we write $\Omega_k = \omega_k + \Delta$, where $\Delta$ accounts for the gap of the relaxation and solver noise.
-For $k \geq 3$, this decomposition is unique up to phases when the operators $\dyad{\psi_i}$ are linearly independent~\cite{Kruskal1977}. When the relaxation is tight and $\Omega_k = \omega_k$, we can then retrieve it exactly with Jennrich's algorithm~\cite{Harshman1970,Leurgans1993}. Since $\Omega_k$ is in general not of this form, we instead use the PARAFAC (or CANDECOMP) algorithm~\cite{Harshman1970,CarrollChang1970} from the TensorLy package~\cite{tensorly} to find a decomposition $\{p_j, \ket{\psi_j}\}$ that locally minimizes the cost function
+For $k \geq 3$, this decomposition is unique up to phases when the operators $\dyad{\psi_i}$ are linearly independent~\cite{Kruskal1977}. When the relaxation is tight and $\Omega_k = \omega_k$, we can then retrieve it exactly with Jennrich's algorithm~\cite{Harshman1970,Leurgans1993}. Since $\Omega_k$ is in general not of this form, we instead use the PARAFAC (or CANDECOMP) algorithm~\cite{Harshman1970,CarrollChang1970} from the TensorLy package~\cite{tensorly}, initialized with Jennrich's algorithm, to find a decomposition $\{p_j, \ket{\psi_j}\}$ that locally minimizes the cost function
 \begin{equation}
     \Theta_k:=\Big\|\Omega_k - \sum_j p_j \dyad{\psi_j}^{\otimes k}\Big\|_F.
 \end{equation}
@@ -294,13 +291,21 @@ This is a decomposition of the state $\sigma = \sum_j p_j \dyad{\psi_j}$, which 
 \end{equation}
 where $\sigma^{-1/2}$ is taken on the support of $\sigma$. If $\operatorname{supp} \rho \subseteq \operatorname{supp} \sigma$, then $\sum_j \dyad{\varphi_j} = \rho^{1/2}\Pi_\sigma\rho^{1/2} = \rho$, with $\Pi_\sigma$ the projector onto the support of $\sigma$. Hence $\{q_j,\ket{\phi_j}\}$ with $q_j = \|\varphi_j\|^2$ and $\ket{\phi_j}=\ket{\varphi_j}/\|\varphi_j\|$ is a decomposition of $\rho$ and gives a valid upper bound on the convex roof.
 
-In practice, we found that gradient descent over ensemble decompositions, parametrized via the HJW theorem~\cite{HJW}, usually performs better when it comes to extracting the upper bound. However, the tensor extraction method remains useful in cases where an upper bound cannot be extracted otherwise, such as the LOCC convertibility problem we define later.
+As a comparison, we also compute upper bounds by gradient descent over ensemble decompositions, parametrized via the HJW theorem~\cite{HJW} (App.~\ref{app:HJW}). Both upper bounds are comparable for the linear entropy and the Vidal monotone $E_1$, while gradient descent gives tighter upper bounds for the entanglement of formation (Figs.~\ref{fig:EoF}, \ref{fig:namedLinearEntropy} and~\ref{fig:Vidal}). However, the tensor extraction method remains useful in cases where an upper bound cannot be extracted otherwise, such as the LOCC convertibility problem we define later.
+
+\begin{theorem}\label{thm:extraction}
+    Let $P$ be a symmetric polynomial, using the rank reduction step (App.~\ref{app:tensor}), Jennrich's algorithm and the repair step, as $k\to \infty$, the value of the decomposition we obtain converges to $\widehat{P}(\rho)$.
+\end{theorem}
+The proof is shown in App.~\ref{app:extractionConv}.
+
+We show the bounds on the convex roof of the linear entropy $S_L(\psi)=1-\tr\rho_A^2$ in Fig.~\ref{fig:linearEntropy}.
 
 \input{figures/fig_linear_entropy}
 
 \section{Non-polynomial measures via Linear Programming}\label{sec:LP}
+\input{figures/fig_EoF}
 Non-polynomial measures can also be approximated by polynomials.
-In theory, non-polynomial functions can be bounded arbitrarily well by infinite series of polynomials. We define 
+In theory, non-polynomial functions can be bounded arbitrarily well by infinite series of polynomials. We define
 \begin{equation}\label{eq:FLBexact}
     \widetilde{F}_{{\rm LB}_{k,m}}(\rho)=\sup_{\substack{P\leq F\\ \deg P\leq m}}\ \min_{\Phi_{k,m}}\ \tr\left((O_P^A\otimes\I^B)\,\Phi_{k,m}\right),
 \end{equation}
@@ -315,15 +320,20 @@ We get the following optimization problem
 \end{equation}
 This grid procedure tolerates a small error $\epsilon$, where the polynomial might be larger than the given function between grid points. Since we can retrieve the polynomial as output from the SDP, we can compute this error numerically and subtract it from the output to obtain a lower bound. In practice, to obtain a single minimization problem, we replace the LP by its dual (Appendix~\ref{app:LP}).
 \begin{theorem}\label{thm:non-polyHier}
-    Let $F$ be a continuous symmetric function of the entanglement spectrum, and let $\widehat{F}(\rho)$ be its convex roof~\eqref{eq:CRoof}. Then $\widetilde F_{{\rm LB}_{k,m}}(\rho)\leq\widehat F(\rho)$ for all $k\leq m$, the bound is nondecreasing in $k$ and $m$, and $\lim_{k\to\infty}\widetilde F_{{\rm LB}_{k,m}}(\rho)=\widehat F(\rho)$, with $m\geq k$.
+    Let $F$ be a continuous symmetric function of the entanglement spectrum, and let $\widehat{F}(\rho)$ be its convex roof~\eqref{eq:CRoof}. Then $\widetilde F_{{\rm LB}_{k,m}}(\rho)\leq\widehat F(\rho)$ for all level $(k,m)$ with $k\leq m$, the bound is nondecreasing in $k$ and $m$, and $\lim_{k,m\to\infty}\widetilde F_{{\rm LB}_{k,m}}(\rho)=\widehat F(\rho)$.
 
     With a finite grid, $F_{{\rm LB}_{k,m}}(\rho)-\epsilon\leq\widehat F(\rho)$, where $\epsilon=\max_\a\left(P^*(\a)-F(\a)\right)$ is the grid error of the polynomial $P^*$ returned by the solver.
 \end{theorem}
 The proof is given in Appendix~\ref{app:LPconvergence}.
 
-\input{figures/fig_EoF}
+We show the bounds obtained from this SDP for the entanglement of formation
+\begin{equation}\label{eq:EoF}
+    E_F(\rho)=\min_{\mathcal{D}(\rho)}\sum_i - p_i \tr(\rho_{A,i} \log_2(\rho_{A,i}))
+\end{equation}
+where $\rho_{A,i} = \tr_B\dyad{\psi_i}$ (Fig.~\ref{fig:EoF}).
 
 \section{LOCC convertibility}
+
 By Ref.~\cite{Jonathan_1999}, a pure state $\ket{\psi}$ can be converted into an ensemble $\{p_i, \ket{\psi_i}\}$ by LOCC if and only if
 \begin{equation}\label{eq:JPcriterion}
     E_j(\psi) \geq \sum_i p_i E_j(\psi_i)\qquad \text{for all } j=1,\dots,d_A-1,
@@ -341,13 +351,12 @@ Since all the inequalities must hold for the same decomposition, we combine the 
 The optimal value $s_{k,m}$ is the smallest worst-case violation of Eq.~\eqref{eq:JPcriterion} over the relaxed set of decompositions. The dual variables of this SDP provide weights $t_j^*\geq0$ with $\sum_jt^*_j=1$ and polynomials $Q_j^*$ satisfying $Q^*_j\leq t^*_jE_j$ on the grid (Appendix~\ref{app:LOCC}).
 \begin{theorem}\label{thm:LOCC}
     Let $\epsilon_j=\max_\a\left(Q^*_j(\a)-t^*_jE_j(\a)\right)$ be the grid errors of the polynomials returned by the solver.
-    If $s_{k,m}>\sum_j\epsilon_j$ for some $(k,m)$, then $\ket{\psi}$ cannot be converted into $\rho$ by LOCC. The proof is given in Appendix~\ref{app:LOCC}
+    If $s_{k,m}>\sum_j\epsilon_j$ for some $(k,m)$, then $\ket{\psi}$ cannot be converted into $\rho$ by LOCC.
 \end{theorem}
+The proof is given in Appendix~\ref{app:LOCC}.
 
-For $k\geq 3$, the extraction procedure from Section~\ref{sec:extractingTheDecomposition} also allows us to get a certificate that a state is convertible via LOCC when the decomposition satisfies Eq.~\eqref{eq:JPcriterion}.
-
+For $k\geq 3$, the extraction procedure from Section~\ref{sec:extractingTheDecomposition} also provides a heuristic certificate of convertibility: if the extracted decomposition satisfies Eq.~\eqref{eq:JPcriterion}, then $\ket{\psi}$ can be converted into $\rho$ by LOCC.
 \input{figures/fig_locc}
-
 
 \iffalse
 \section{Experiment friendly version}
@@ -356,9 +365,9 @@ In the constraints of our SDP we might not want to optimize over a state $\rho$ 
 \fi
 
 \section{Conclusions}
-Using spectral estimation techniques and semidefinite programming, we have introduced a method to estimate any entanglement measure for mixed states. We do so by approximating any measure over mixed-state decompositions by a polynomial lower bound. This formulation allows us to obtain tight bounds for polynomial and non-polynomial measures for both PPT and NPT entangled states in a complete hierarchy. In turn, we demonstrate it to be a strong and robust method to detect entanglement. This method also allows us to address the problem of systematically certifying LOCC convertibility from pure to mixed states, with a hierarchy of certificates of convertibility and non-convertibility. At low levels, this already allows us to determine convertibility for a large set of qutrit-qutrit state pairs. Due to the results of Ref.~\cite{Toth2015CroofTP}, the method can also be used in an experiment friendly setting by using expectation value constraints on the first marginal of the SDP.
+Using spectral estimation techniques and semidefinite programming, we have introduced a method to estimate any entanglement measure for mixed states. We do so by approximating any measure over mixed-state decompositions by a polynomial lower bound. This formulation gives a complete hierarchy of lower bounds for polynomial and non-polynomial measures, which is tight at low levels for the linear entropy, but converges more slowly for the entanglement of formation. In turn, we demonstrate it to be a robust method to detect entanglement dimension. This method also allows us to address the problem of certifying LOCC convertibility from pure to mixed states, with a hierarchy of certificates of non-convertibility and a heuristic approach for convertibility. At level $(3,4)$, this already allows us to determine convertibility for a large set of qutrit-qutrit state pairs (see Fig.~\ref{fig:locc}). Due to the results of Ref.~\cite{Toth2015CroofTP}, the method can also be used in an experiment friendly setting by using expectation value constraints on the first marginal of the SDP.
 
-{\em AI statement}. This article was entirely written by humans (the authors). The numerics, plots and the following steps were assisted by Claude: \albert{List exactly the equations that were derived by Claude}.
+{\em AI statement}. This article was entirely written by humans (the authors). The numerics, plots and the following steps were assisted by Claude: \albert{List exactly the equations that were derived by Claude}\anton{Honestly, everything was assisted by claude}.
 
 {\em Acknowledgements.}
 AR acknowledges support
@@ -494,14 +503,33 @@ We can therefore equivalently optimize over $\Omega_k^\rho=V_\rho^{\otimes k}\Om
 The same argument applies to the simplified relaxation: by the permutation invariance of $\tr_B\Phi_{k,m}$, every $A$ register has reduced state $\rho_A=\tr_B(\rho)$, so all $A$ registers can be encoded on the support of $\rho_A$, and all $B$ registers on the support of $\rho_B$.
 
 
-\section{Tensor decomposition}\label{app:tensor}
+\section{Tensor decomposition}
+\subsection{Heuristic extraction}\label{app:tensor}
 We take the optimal solution $\Phi_{k,m}$ of Eq.~\eqref{eq:marginals_SDP} (or $\Omega_k$ for the full SDP) and trace out the marginal registers, which we cannot use to extract tensor powers, to obtain $\Omega_k$. We work on the support of $\rho$ as in Appendix~\ref{app:supportReduction}: with $r=\operatorname{rank}\rho$ and the isometry $V_\rho:\operatorname{supp}\rho\to\C^r$, we consider $\Omega_\rho=V_\rho^{\otimes k}\Omega_kV_\rho^{\dagger\otimes k}$.
 
-To work with real tensors, let $\{G_a\}_{a=0}^{r^2-1}$ be a Hilbert--Schmidt orthonormal basis of Hermitian operators on $\C^r$, consisting of the normalized identity $G_0=\I/\sqrt r$ and the generalized Gell-Mann matrices. Every pure state can be written as $\dyad{\psi}=\sum_ax_aG_a$ with a real vector $x$ satisfying $x_0=1/\sqrt r$ and $\|x\|_2=1$. We define the real symmetric order-$k$ tensor $\Omega^G_{a_1\dots a_k}=\tr\left((G_{a_1}\otimes\dots\otimes G_{a_k})\,\Omega_\rho\right)$, which for the true $\omega_k$ equals $\sum_ip_i\,x^{(i)\otimes k}$. We run PARAFAC on $\Omega^G$ with nonnegative weights, obtaining terms $\{p_i,v_i\}$; we normalize each factor such that $v_{i,0}=1/\sqrt r$, absorbing the scale into $p_i$, and recover the pure states $\ket{\psi_i}$ as the top eigenvectors of $\sum_av_{i,a}G_a$. Finally, we repair the decomposition $\{p_i,\ket{\psi_i}\}$ as described in Sec.~\ref{sec:extractingTheDecomposition}.
+To work with real tensors, let $\{G_a\}_{a=0}^{r^2-1}$ be a Hilbert--Schmidt orthonormal basis of Hermitian operators on $\C^r$, consisting of the normalized identity $G_0=\I/\sqrt r$ and the generalized Gell-Mann matrices. Every pure state can be written as $\dyad{\psi}=\sum_ax_aG_a$ with a real vector $x$ satisfying $x_0=1/\sqrt r$ and $\|x\|_2=1$. We define the real symmetric order-$k$ tensor $\Omega^G_{a_1\dots a_k}=\tr\left((G_{a_1}\otimes\dots\otimes G_{a_k})\,\Omega_\rho\right)$, which for the true $\omega_k$ equals $\sum_ip_i\,x^{(i)\otimes k}$. We run PARAFAC (alternating least squares) on $\Omega^G$ with nonnegative weights, obtaining terms $\{p_i,v_i\}$; we normalize each factor such that $v_{i,0}=1/\sqrt r$, absorbing the scale into $p_i$, and recover the pure states $\ket{\psi_i}$ as the top eigenvectors of $\sum_av_{i,a}G_a$. Finally, we repair the decomposition $\{p_i,\ket{\psi_i}\}$ as described in Sec.~\ref{sec:extractingTheDecomposition}.
 
 
-The number of terms $n$ fitted by PARAFAC is scanned over $n\in[r,r^2]$, keeping the best upper bound: any decomposition of $\rho$ has at least $r$ terms, otherwise the repair fails, and an optimal decomposition needs at most $r^2$ terms by Carath\'eodory's theorem~\cite[Lemma~1]{Uhlmann1998}. Before the extraction, it helps to reduce the rank of the SDP solution. We solve a second SDP, minimizing $\tr(R\,\Phi_{k,m})$ for a random Hermitian $R$ over the same feasible set with the additional constraint $\tr\left((O_P\otimes\I^B)\Phi_{k,m}\right)\leq P_{\rm LB}+\delta$ for a small $\delta>0$. This selects an extreme point of the near-optimal face, which generically has low rank, instead of a mixture of several optimal solutions.
+The number of terms $n$ fitted by PARAFAC is the rank of $\Omega_\rho$, which equals the number of terms when the $\dyad{\psi_i}^{\otimes k}$ are linearly independent. 
+Any decomposition of $\rho$ has at least $r$ terms, otherwise the repair fails. Conversely, every decomposition of $\rho$ consists of states on $\operatorname{supp}\rho\cong\C^r$, whose state space has dimension $r^2$, so by Carath\'eodory's theorem the convex roof of a continuous function is attained by a decomposition with at most $r^2$ terms~\cite[Lemma~A-2]{Uhlmann1998}. 
 
+Before the extraction, it helps to reduce the rank of the SDP solution. We solve a second SDP, minimizing $\tr(R_3 \ot \I \,\Phi_{k,m})$ for a random Hermitian $R_3$ acting on the first $3$ copies, over the same feasible set with the additional constraint $\tr\left((O_P\otimes\I^B)\Phi_{k,m}\right)\leq P_{\rm LB}+\delta_k$ for a small $\delta_k\to0$ with $\delta_k \geq \widehat{P}(\rho)-P_{{\rm LB}_k}$. This selects an extreme point of the near-optimal face, which generically has low rank, instead of a mixture of several optimal solutions. 
+
+\subsection{Convergence of the extraction}\label{app:extractionConv}
+Given a state $\omega_3 = \sum_i p_i \dyad{\psi_i}^{\otimes 3}$, we can use Jennrich's algorithm to recover uniquely the decomposition $\{p_i, \ket{\psi_i}\}_i$ when the $\dyad{\psi_i}$ are linearly independent. Therefore, we need to select a low-rank extreme point $\Omega_3 = \tr_{A_4B_4\dots A_kB_k}(\Omega_k)$. We apply the rank reduction step as shown in App.~\ref{app:tensor}.
+
+Given an optimal decomposition $\{q_i, \dyad{\psi_i}\}$ of $\rho$, if this decomposition does not come from linearly independent projectors, there exists a nonzero real vector $c$ such that $\sum_i c_i \dyad{\psi_i} = 0$ with $\sum_i c_i=0$.
+For a small $0<t\leq \min_i \tfrac{q_i}{|c_i|}$, define two other decompositions $\{q_i + t c_i, \dyad{\psi_i}\}$ and $\{q_i - t c_i, \dyad{\psi_i}\}$, their midpoint is the decomposition $\{q_i, \dyad{\psi_i}\}$.
+Since $\sum_i (q_i+t c_i) P(\psi_i) \geq \widehat{P}(\rho)=\sum_i q_i P(\psi_i)$ and $\sum_i (q_i- t c_i) P(\psi_i) \geq \widehat{P}(\rho)$, then $\sum_i c_i P(\psi_i) = 0$. These decompositions are also optimal and $\{q_i, \dyad{\psi_i}\}$ is not an extreme point. Therefore, any extreme point of the convex set of optimal decompositions must have linearly independent projectors.
+
+For almost every $R$, the minimizer $\omega_3^*$ of $\tr(R\,\omega_3)$ among the $\omega_3$ of optimal decompositions is unique. The decomposition of $\rho$ giving $\omega_3^*$ has linearly independent projectors. Using the same argument shown above, if it has linearly dependent terms, we can define two decompositions whose associated $\omega_3$ is optimal with midpoint $\omega_3^*$. By uniqueness, both decompositions give $\omega_3^*$. We can simply increase $t$ until a weight vanishes and repeat to end up at a decomposition into linearly independent terms. Therefore, $\omega_3^*$ decomposes into linearly independent terms.
+
+As $k\to\infty$ the rank-reduced $\Omega_3$ converges to $\omega_3(\mu_e)=\sum_ip_i\dyad{\psi_i}^{\otimes3}$, where
+$\mu_e$ is the extreme optimal decomposition singled out by $R$. By App.~\ref{app:ProofCongNonExtHier}, every
+limit point as $k\to \infty$ corresponds to the state $\omega_3$ of an optimal decomposition, and for almost every $R$ the minimizer of $\tr(R\,\cdot)$ on this set is unique and has linearly independent projectors. 
+Then, Jennrich's algorithm is continuous at $\omega_3(\mu_e)$, so applied to $\Omega_3$ it gives a decomposition of a state $\sigma$ that is $\epsilon$-close to $\rho$ with $\epsilon\to0$ as $k\to\infty$, which after the repair step has value converging to $\widehat{P}(\rho)$.
+
+This argument does not extend to LOCC since the optimal decompositions do not form a face of the set of decompositions of $\rho$, and the extreme points may not have linearly independent projectors, in which case we cannot use Jennrich's algorithm.
 
 \section{Linear program for non-polynomial functions}\label{app:LP}
 
@@ -523,15 +551,15 @@ The primal is always feasible, since the constant polynomial $P=\min_gF(\a_g)$ i
     \text{s.t. }& \Phi_{k,m}\ \text{feasible for Eq.~\eqref{eq:marginals_SDP}},\quad y\geq0, \nonumber\\
     & \sum_g y_g\,s_\lambda(\a_g)=\tr\left((\tfrac{1}{f^\lambda}\Pi^\lambda\otimes\I^B)\,\Phi_{k,m}\right)\quad\forall\lambda\vdash m. \nonumber
 \end{align}
-The coefficients $c_\lambda$ of the optimal polynomial are recovered as the dual variables of the equality constraints. Since the grid is discrete, the optimal polynomial $P^*$ may exceed $F$ between grid points. We therefore report $F_{{\rm LB}_{k,m}}-\epsilon$, where $\epsilon=\max_\a\left(P^*(\a)-F(\a)\right)$ is estimated from the polynomial returned by the solver. This is a valid lower bound, since $P^*-\epsilon\leq F$ on all spectra.
+The coefficients $c_\lambda$ of the optimal polynomial are recovered as the dual variables of the equality constraints. Since the grid is discrete, the optimal polynomial $P^*$ may exceed $F$ between grid points. We therefore report $F_{{\rm LB}_{k,m}}-\epsilon$, where $\epsilon=\max_\a\left(P^*(\a)-F(\a)\right)$ is estimated from the polynomial returned by the solver. This is a valid lower bound, since $P^*-\epsilon\leq F$ on all spectra. 
 
-\subsection{Convergence of the LP-based bound}\label{app:LPconvergence}
+\subsection{Convergence of the bound}\label{app:LPconvergence}
 Here we prove Theorem~\ref{thm:non-polyHier} for the bound $\widetilde F_{{\rm LB}_{k,m}}$ of Eq.~\eqref{eq:FLBexact}, in which $P\leq F$ is imposed on all spectra. Monotonicity follows naturally from the facts that admissible polynomials stay admissible at higher level by lifting (Lemma~\ref{lem:lifting}), and that the SDP is monotone (Appendix~\ref{app:monotonicity}).
 
 By the Weierstrass approximation theorem, for any continuous function $F'$ and any $\eta>0$, we can find a polynomial $P'$ such that $|F'(\a)-P'(\a)| < \eta$ for all spectra $\a$. Then, by averaging over permutations of the variables, for any continuous symmetric function $F$, we can find a symmetric polynomial $P$ such that $|F(\a)-P(\a)| < \eta$ for all spectra $\a$.
-Shifting $P$ by $\eta$, for any $F$ and any $\eta>0$, there exists a symmetric polynomial $P$ such that $P(\a) < F(\a)$ and $F(\a)-P(\a) < 2\eta$ for all spectra $\a$. This $P$ is admissible for $m\geq k\geq\deg P$, so by Theorem~\ref{thm:ConvergenceSDPcroof}, $\lim_{k\to\infty}\widetilde F_{{\rm LB}_{k,m}}(\rho)\geq\lim_{k\to\infty}P_{{\rm LB}_k}(\rho)=\widehat P(\rho)\geq\widehat F(\rho)-2\eta$. Conversely, $P\leq F$ implies $\widehat P(\rho)\leq\widehat F(\rho)$ for every admissible $P$, so $\widetilde F_{{\rm LB}_{k,m}}(\rho)\leq\widehat F(\rho)$. Since $\eta$ is arbitrary,
+Shifting $P$ by $\eta$, for any $F$ and any $\eta>0$, there exists a symmetric polynomial $P$ such that $P(\a) < F(\a)$ and $F(\a)-P(\a) < 2\eta$ for all spectra $\a$. This $P$ is admissible for $m\geq k\geq\deg P$, so by Theorem~\ref{thm:ConvergenceSDPcroof}, $\lim_{k,m\to\infty}\widetilde F_{{\rm LB}_{k,m}}(\rho)\geq\lim_{k,m\to\infty}P_{{\rm LB}_k}(\rho)=\widehat P(\rho)\geq\widehat F(\rho)-2\eta$. Conversely, $P\leq F$ implies $\widehat P(\rho)\leq\widehat F(\rho)$ for every admissible $P$, so $\widetilde F_{{\rm LB}_{k,m}}(\rho)\leq\widehat F(\rho)$. Since $\eta$ is arbitrary,
 \begin{equation}
-    \lim_{k\to\infty}\widetilde F_{{\rm LB}_{k,m}}(\rho)=\widehat F(\rho).
+    \lim_{k,m\to\infty}\widetilde F_{{\rm LB}_{k,m}}(\rho)=\widehat F(\rho).
 \end{equation}
 
 With a finite grid, the set of admissible polynomials is larger, so $F_{{\rm LB}_{k,m}}\geq\widetilde F_{{\rm LB}_{k,m}}$, and $F_{{\rm LB}_{k,m}}-\epsilon\leq\widehat F(\rho)$, where $\epsilon$ is the grid error of the returned polynomial. The uncorrected value $F_{{\rm LB}_{k,m}}$ is nondecreasing in the level by the same argument as above, but the corrected value $F_{{\rm LB}_{k,m}}-\epsilon$ need not be, since the grid error can change between levels. Since every corrected value is a valid lower bound, their running maximum over the levels is a valid and nondecreasing lower bound. In our numerics, increasing the level yields tighter bounds.
@@ -560,6 +588,7 @@ With the moments $\mu_\lambda(\Phi)=\tr\left((\tfrac{1}{f^\lambda}\Pi^\lambda\ot
     & \sum_g y^{(j)}_g\,s_\lambda(\a_g)=\mu_\lambda(\Phi_{k,m})\quad\forall\lambda\vdash m,\ \forall j, \nonumber\\
     & \sum_g y^{(j)}_g\,E_j(\a_g)-E_j(\psi)\leq s\quad\forall j. \nonumber
 \end{align}
+
 For fixed $\Phi_{k,m}$, the minimization over each $y^{(j)}$ is the dual LP of Appendix~\ref{app:LP} with $F=E_j$, so by strong duality
 \begin{equation}\label{eq:LOCCminmax}
     s_{k,m}=\min_{\Phi_{k,m}}\ \max_{j}\ \max_{P_j\in\mathcal{P}_j}\Big(\tr\left((O_{P_j}\otimes\I^B)\Phi_{k,m}\right)-E_j(\psi)\Big).
@@ -591,7 +620,7 @@ In this procedure, the grid errors $\epsilon_j$ need to be computed in a postpro
 
 \section{Further analysis}
 In this appendix, we provide additional numerical results for the linear entropy (Fig.~\ref{fig:namedLinearEntropy}) and the Vidal monotones (Fig.~\ref{fig:Vidal}).
-% We compare our method of extracting upper bounds from the decomposition with a HJW based gradient descent method. 
+% We compare our method of extracting upper bounds from the decomposition with a HJW based gradient descent method.
 We also show how the LP adapts to different states by choosing different lower-bounding polynomials, which are tangent to the reference function at different points of the spectrum (Fig.~\ref{fig:polynomials}).
 
 
@@ -601,10 +630,18 @@ We also show how the LP adapts to different states by choosing different lower-b
 \input{figures/fig_polynomials}
 
 \section{Numerical implementation}\label{app:numerics}
-All the SDPs are solved with the interior-point conic solver QICS~\cite{qics}.
+All the SDPs are solved with the interior-point conic solver QICS~\cite{qics}, with its default tolerances.
 The PPT entangled states from the figures come from the library \texttt{bound-entangled}~\cite{boundEntangled} and the NPT ones are built with \texttt{toqito}~\cite{toqito}. For the Horodecki $3\times3$ and $2\times4$ states we take the parameter $a=0.5$ in Figs.~\ref{fig:EoF}, \ref{fig:namedLinearEntropy} and~\ref{fig:Vidal}. The parameters of the NPT states are the ones given in the caption of Fig.~\ref{fig:polynomials}.
 
+\subsection{Upper bounds by gradient descent}\label{app:HJW}
+By the HJW theorem~\cite{HJW}, every decomposition of $\rho=\sum_i\lambda_i\dyad{e_i}$ 
+% its laaaaate
+into $M$ pure states is obtained
+by mixing the vectors $\sqrt{\lambda_i}\ket{e_i}$ with an $M\times M$ unitary, so every unitary gives a decomposition of
+$\rho$ and hence an upper bound on the convex roof. As in Ref.~\cite{Rothlisberger2009}, we minimize this upper bound by
+gradient descent over the unitaries, with $M=r^2$ and several random starting points, and keep the best value.
 
+\input{figures/fig_memory}
 
 \end{widetext}
 

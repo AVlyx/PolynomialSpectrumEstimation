@@ -226,19 +226,27 @@ def locc_csv() -> None:
 
 # ---------------------------------------------------------------- memory of the full and simplified hierarchies
 def memory_csv() -> None:
-    """Schur complement memory 8 n^2 bytes per level (rows) and (rank rho, rank rho_A) (columns mem_r<r>a<r_A>, nan if
-    not computed). Levels grouped by the degree m, with one free slot between groups (column pos)."""
-    from memory import LEVELS as MEMORY_LEVELS, STATES
+    """Measured memory in GB per level (rows) and (rank rho, rank rho_A) (columns mem_r<r>a<r_A>): the cheaper of the
+    runs with eliminated and explicit permutation equalities; nan if no run fit (above CUT_GB or the machine). Levels
+    grouped by the degree m, with one free slot between groups (column pos)."""
+    from memory import CUT_GB, LEVELS as MEMORY_LEVELS, STATES
 
-    data = load("memory")
+    data = load("memory_measured")
     if not data:
         return
+
+    def runs(r, rA, k, m):
+        return [data.get(f"{r},{rA}/{k},{m}/{variant}", {}) for variant in ("eliminated", "explicit")]
+
+    def measured(r, rA, k, m):
+        values = [run["memory_bytes"] / 1e9 for run in runs(r, rA, k, m) if run.get("status") == "ok"]
+        return min(values) if values and min(values) <= CUT_GB else None
+
     rows, pos, prev_m = [], 0, None
     for k, m in MEMORY_LEVELS:
         pos += 1 if prev_m in (None, m) else 2
         prev_m = m
-        rows.append([f"$({k},{m})$", k, m, pos, *(data.get(f"{r},{rA}/{k},{m}", {}).get("memory_bytes")
-                                                 for r, rA in STATES)])
+        rows.append([f"$({k},{m})$", k, m, pos, *(measured(r, rA, k, m) for r, rA in STATES)])
     write_csv("memory.csv", ["level", "k", "m", "pos", *(f"mem_r{r}a{rA}" for r, rA in STATES)], rows)
 
 
