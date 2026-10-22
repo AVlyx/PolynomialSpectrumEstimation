@@ -2,7 +2,7 @@
 % \memcurve{state}{color}{mark}{legend}: the measured memory of one state (column mem_<state> of memory.csv), broken
 % between the groups of levels of equal degree m (pos 1-2: m = 2, pos 4-6: m = 3, pos 8-11: m = 4).
 \providecommand{\memcurve}[4]{%
-  \addplot[#2, thick, mark=#3, mark size=1.8pt, restrict x to domain=0:2.5] table[x=pos, y=mem_#1] {\memfile};
+  \addplot[#2, thick, mark=#3, mark size=1pt, restrict x to domain=0:2.5] table[x=pos, y=mem_#1] {\memfile};
   \addlegendentry{#4}
   \addplot[#2, thick, mark=#3, mark size=1.8pt, restrict x to domain=3.5:6.5, forget plot]
     table[x=pos, y=mem_#1] {\memfile};
@@ -13,13 +13,14 @@
   \centering
   \def\memfile{figures/data/memory.csv}%
   \begin{tikzpicture}
-    \begin{axis}[width=\columnwidth, height=0.8\columnwidth, ymode=log, ymin=0.01, ymax=32, xmin=0.4, xmax=11.6,
+    \begin{axis}[name=memaxis, width=0.85\columnwidth, height=0.6\columnwidth, ymode=log, ymin=0.01, ymax=32, xmin=0.4, xmax=11.6,
       xtick=data, xticklabels from table={figures/data/memory.csv}{level}, xlabel={level $(k,m)$},
       ytick={0.01,0.1,1,10}, yticklabels={10\,MB,100\,MB,1\,GB,10\,GB}, ylabel={memory},
       xticklabel style={rotate=45, anchor=north east, font=\scriptsize, inner sep=1pt},
       tick label style={font=\footnotesize}, label style={font=\small}, xtick style={draw=none},
       ymajorgrids, grid style={cGray!25}, clip=false, table/col sep=comma,
-      legend style={font=\scriptsize, at={(0.5,-0.3)}, anchor=north, draw=none, legend columns=2,
+      legend to name=memlegend,
+      legend style={font=\scriptsize, draw=none, legend columns=3,
       /tikz/every even column/.append style={column sep=4pt}}, legend cell align=left]
       \fulllevel{2}\fulllevel{6}\fulllevel{11}
       \addplot[draw=none, forget plot] table[x=pos, y expr=1] {\memfile};% the ticks (xtick=data)
@@ -32,7 +33,8 @@
       \node[font=\scriptsize, anchor=south] at (axis cs:5,32) {$m=3$};
       \node[font=\scriptsize, anchor=south] at (axis cs:9.5,32) {$m=4$};
     \end{axis}
+    \node[anchor=north, yshift=-2pt] at (memaxis.outer south) {\pgfplotslegendfromname{memlegend}};
   \end{tikzpicture}
-  \caption{Memory needed by the SDP~\eqref{eq:marginals_SDP} with the QICS solver~\cite{qics} at different level for random states $\rho$ with $r=\operatorname{rank}(\rho)$ and $r_A = \operatorname{rank}(\tr_B(\rho))$. When $k=m$, the SDP full SDP~\eqref{eq:SDPcroof1} is used. \textcolor{blue}{this to appendix with the numerics}}
+  \caption{Memory needed by the SDP~\eqref{eq:marginals_SDP} with the QICS solver~\cite{qics} at different levels for random states $\rho$ with $r=\operatorname{rank}(\rho)$ and $r_A = \operatorname{rank}(\tr_B(\rho))$. When $k=m$, the SDP full SDP~\eqref{eq:SDPcroof1} is used.}
   \label{fig:memory}
 \end{figure}

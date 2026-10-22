@@ -1,0 +1,433 @@
+\documentclass[aps,pra,twocolumn,superscriptaddress,groupedaddress]{revtex4-2}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,dsfont,booktabs,listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+
+\newcommand{\C}{\mathds{C}}
+\newcommand{\one}{\mathds{1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\spec}{spec}
+\definecolor{antongreen}{HTML}{229922}
+\newcommand{\anton}[1]{{\color{antongreen} Anton: #1}}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{RoyalBlue},
+  commentstyle=\color{gray},
+  stringstyle=\color{BrickRed},
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  framerule=0.3pt,
+  xleftmargin=2pt,
+  xrightmargin=2pt,
+  showstringspaces=false
+}
+
+\begin{document}
+
+\title{\code{bound-entangled} and \code{schur-weyl}: lightweight Python tools\\
+for entanglement theory and Schur--Weyl duality}
+
+\author{Authors \anton{author list}}
+\affiliation{Naturwissenschaftlich-Technische Fakult\"{a}t, Universit\"{a}t Siegen,
+Walter-Flex-Stra\ss e 3, 57068 Siegen, Germany}
+
+\date{\today}
+
+\begin{abstract}
+We describe two small open-source Python packages written while developing
+semidefinite hierarchies for convex-roof entanglement measures based on
+Schur--Weyl duality~\cite{mainpaper}. \code{bound-entangled} gathers, in a
+single tested package, the constructions of bound entangled states that are
+otherwise scattered across the literature, each returned as a plain NumPy
+density matrix. \code{schur-weyl} implements the representation theory of the
+symmetric group needed to work with the Schur--Weyl decomposition of
+$(\C^d)^{\otimes k}$: partitions and tableaux, dimension formulas, characters,
+Schur polynomials, Kronecker coefficients, isotypic projectors and the Schur
+transform, without requiring a full computer algebra system. Both packages
+depend only on NumPy and are available on PyPI.
+\end{abstract}
+
+\maketitle
+
+%==========================================================================
+\section{Introduction}
+%==========================================================================
+
+Numerical work in entanglement theory constantly needs two kinds of
+ingredients. The first is a set of \emph{test states}. Bound entangled states,
+i.e.\ entangled states with a positive partial transpose
+(PPT)~\cite{Horodecki1998}, are the standard benchmark for any entanglement
+criterion or measure, since the PPT criterion~\cite{Peres1996} fails on them by
+definition. Their constructions, however, are spread over two decades of papers,
+with differing conventions, parametrizations and occasional typos, and they are
+typically re-implemented from scratch in each new project.
+
+The second ingredient is the \emph{representation theory of the symmetric
+group}. Schur--Weyl duality~\cite{Fulton1991} decomposes
+\begin{equation}\label{eq:SW}
+  (\C^d)^{\otimes k} \cong \bigoplus_{\substack{\lambda\vdash k\\ \ell(\lambda)\le d}}
+  \mathcal{S}^\lambda_k \otimes \mathcal{U}^\lambda_d,
+\end{equation}
+and underlies spectrum estimation~\cite{Keyl2001}, Schmidt-rank
+tests~\cite{Christandl2005} and, in our case, polynomial optimization over
+entanglement spectra~\cite{mainpaper}. Working with Eq.~\eqref{eq:SW} requires
+partitions, Young tableaux, characters $\chi^\lambda$, dimensions $f^\lambda$,
+Schur polynomials $s_\lambda$ and the isotypic projectors
+\begin{equation}\label{eq:isotypic}
+  \Pi^\lambda = \frac{f^\lambda}{k!}\sum_{\pi\in S_k}\chi^\lambda(\pi)\,\pi .
+\end{equation}
+These objects are available in computer algebra systems such as
+SageMath~\cite{sagemath}, but importing such a system into a numerical
+pipeline (here an SDP built on NumPy and a conic solver) is heavy: a
+multi-gigabyte installation, a separate environment and slow imports, for a
+handful of combinatorial functions.
+
+We therefore wrote two small packages, \code{bound-entangled} and
+\code{schur-weyl}, which we describe here. Both return plain NumPy arrays or
+Python integers and tuples, so they can be dropped into any existing numerical
+code. Section~\ref{sec:be} presents \code{bound-entangled},
+Sec.~\ref{sec:sw} presents \code{schur-weyl}, Sec.~\ref{sec:example} gives a
+worked example that combines both, and Sec.~\ref{sec:tests} describes how they
+are tested.
+
+%==========================================================================
+\section{\code{bound-entangled}}\label{sec:be}
+%==========================================================================
+
+\subsection{Purpose and design}
+
+The goal of \code{bound-entangled} is simple: one library containing many
+bound entangled states to test against, instead of scattered constructions.
+Each state is produced by a factory function returning its density matrix
+$\rho$ as a NumPy array. The online documentation~\cite{be-docs} has one page
+per state that writes out the construction, the parameter range, what is known
+about the state and the original reference. For example,
+\begin{lstlisting}
+from bound_entangled.c3_otimes_c3 import horodecki
+from bound_entangled.cd_otimes_cd import yu_oh
+
+rho = horodecki(0.5)                  # 9x9
+rho = yu_oh(full_dim=3, x=0.5, y=0.1)  # 9x9
+\end{lstlisting}
+
+Subpackages are named after the Hilbert space the states live in:
+\code{c2\_otimes\_c4}, \code{c3\_otimes\_c3}, \code{c4\_otimes\_c4},
+\code{c5\_otimes\_c5}, \code{cd\_otimes\_cd} (families in any local dimension
+$d$), \code{cm\_otimes\_cn} (parametric constructions on $\C^m\otimes\C^n$) and
+\code{multipartite}. Two utilities, \code{ketbra} and \code{upb}, build outer
+products and the bound entangled state supported on the orthogonal complement
+of an unextendible product basis (UPB)~\cite{Bennett1999UPB}. The only runtime
+dependency is NumPy, so the states can be imported into any numerical code
+without pulling in a larger framework; \code{toqito}~\cite{toqito} is used only
+in the test suite to certify the properties of each state
+(Sec.~\ref{sec:tests}). \anton{confirm once the toqito removal is released} A
+TypeScript port with the same content is also provided.
+
+\subsection{Content}
+
+Table~\ref{tab:states} lists the bipartite states with fixed dimension. In
+addition, the package provides grid states built from graph
+edges~\cite{Lockhart2018} and their hypergraph
+generalization~\cite{Krebs2024}, the GenTiles2 UPB family on
+$\C^m\otimes\C^n$~\cite{DiVincenzo2003}, random PPT and NPT states by rejection
+sampling, and three multipartite constructions: the Smolin
+state~\cite{Smolin2001}, its $2n$-qubit generalization~\cite{Augusiak2006}
+and quasi-diagonal-symmetric states that are PPT across every
+bipartition~\cite{Tura2018}.
+
+\begin{table*}[t]
+\caption{Bipartite states with fixed dimensions in \code{bound-entangled}
+v0.2.2 \anton{bump to the toqito-free release and rerun the numbers}, evaluated at the parameters shown. All are unit-trace, Hermitian,
+positive semidefinite and PPT to machine precision (smallest eigenvalues of
+$\rho$ and $\rho^{T_B}$ above $-3\times10^{-16}$). The last column is the
+realignment (CCNR) norm $\|R(\rho)\|_1$; a value above $1$ certifies
+entanglement~\cite{Rudolph2005,Chen2003}. States with $\|R(\rho)\|_1\le 1$ are
+not detected by this criterion; their entanglement follows from the range
+criterion or the UPB construction.}
+\label{tab:states}
+\begin{ruledtabular}
+\begin{tabular}{llcccl}
+Factory$^{a}$ & State & Space & Rank & $\|R(\rho)\|_1$ & Ref. \\
+\hline
+\code{horodecki(0.5)} & Horodecki $2\times4$ & $2\times4$ & 5 & 0.8469 & \cite{Horodecki1997} \\
+\code{horodecki\_2\_by\_d\_generalized(4,0.5)} & Horodecki $2\times d$ & $2\times4$ & 5 & 0.8469 & \cite{Tura2012} \\
+\code{horodecki(0.5)} & Horodecki $3\times3$ & $3\times3$ & 7 & 1.0023 & \cite{Horodecki1997} \\
+\code{chessboard\_extremal\_PPT()} & Bru\ss--Peres chessboard & $3\times3$ & 4 & 1.1667 & \cite{Bruss2000} \\
+\code{cross\_hatch()} & Cross-hatch grid state & $3\times3$ & 4 & 1.1401 & \cite{Lockhart2018} \\
+\code{ncomms6297()} & V\'ertesi--Brunner nonlocal & $3\times3$ & 4 & 1.0038 & \cite{Vertesi2014} \\
+\code{steering\_state(0.5, 0.5)} & Steerable bound entangled & $3\times3$ & 4 & 1.0726 & \cite{Moroder2014} \\
+\code{tiles\_upb()} & Tiles UPB & $3\times3$ & 4 & 1.0874 & \cite{Bennett1999UPB} \\
+\code{pyramid\_upb()} & Pyramid UPB & $3\times3$ & 4 & 1.0975 & \cite{Bennett1999UPB} \\
+\code{yu\_oh(3, 0.5, 0.1)} & Yu--Oh nonlocal & $3\times3$ & 4 & 1.0329 & \cite{YuOh2017} \\
+\code{piani()} & Benatti--Floreanini--Piani & $4\times4$ & 6 & 1.5000 & \cite{Benatti2004} \\
+\code{gen\_tiles1(4)} & GenTiles1 UPB & $4\times4$ & 7 & 0.9913 & \cite{DiVincenzo2003} \\
+\code{badziag\_private\_singlet(2)} & B\k{a}dzi\k{a}g private singlet & $4\times4$ & 6 & 1.0858 & \cite{Pal2021} \\
+\code{orthogonal\_singlet(2)} & PPT singlet $\rho_{F_2}$ & $4\times4$ & 8 & 1.0858 & \cite{Pal2021} \\
+\code{sn3\_grid\_state()} & Schmidt number 3 grid state & $5\times5$ & 11 & 1.1428 & \cite{Krebs2024} \\
+\end{tabular}
+\end{ruledtabular}
+\footnotesize{$^{a}$Each factory lives in the subpackage named after its space, e.g.\ \code{c3\_otimes\_c3}; the generalized Horodecki, Yu--Oh, GenTiles1 and singlet families live in \code{cd\_otimes\_cd} and take their arguments as keywords, e.g.\ \code{yu\_oh(full\_dim=3, x=0.5, y=0.1)}.}
+\end{table*}
+
+%==========================================================================
+\section{\code{schur-weyl}}\label{sec:sw}
+%==========================================================================
+
+\subsection{Purpose and design}
+
+\code{schur-weyl} provides the representation-theoretic tools needed to work
+with Eq.~\eqref{eq:SW} numerically, without importing SageMath. It is written
+from scratch on top of NumPy and the Python standard library, with no
+combinatorics or representation-theory dependencies. The wheel is about
+$22$~kB and the package imports in about $0.1$~s, essentially the import time
+of NumPy itself.
+
+Conventions are kept elementary: partitions are tuples of non-increasing
+positive integers, permutations are 0-indexed one-line tuples, tableaux are
+tuples of rows, and operators on $(\C^d)^{\otimes k}$ are dense NumPy arrays.
+Expensive combinatorial quantities are cached.
+
+\subsection{Content}
+
+Table~\ref{tab:sw} lists the modules. We highlight three features.
+
+\emph{Isotypic projectors.} \code{isotypic\_proj(lam, d)} returns
+$\Pi^\lambda$ of Eq.~\eqref{eq:isotypic} as a $d^k\times d^k$ matrix, built
+from class sums of the permutation action so that each conjugacy class is
+weighted by a single character value. For larger systems,
+\code{apply\_isotypic\_proj(tensor, lam, axes)} applies $\Pi^\lambda$ to
+chosen axes of a tensor without materializing the matrix. This is exactly the
+operation needed for operators of the form $\Pi^\lambda_A\otimes\one_B$ that
+act on Alice's copies only.
+
+\emph{Symmetric functions.} Schur polynomials are evaluated with the
+Jacobi--Trudi identity, and the change of basis between power sums and Schur
+polynomials is given by the characters,
+$p_\mu=\sum_{\lambda\vdash k}\chi^\lambda(\mu)\,s_\lambda$, computed with the
+Murnaghan--Nakayama rule. Monomial symmetric functions, Kostka matrices and
+their inverses give the other standard change of basis.
+
+\emph{Schur--Weyl measure and Schur transform.}
+\code{schur\_weyl\_measure(spectrum, k)} returns the weak Schur sampling
+distribution $\lambda\mapsto\tr(\Pi^\lambda\rho^{\otimes k})
+=f^\lambda s_\lambda(\spec\rho)$~\cite{Keyl2001}, and
+\code{schur\_transform\_matrix(d, n)} returns the full Schur transform as a
+real orthogonal matrix that block-diagonalizes both actions, using Young's
+orthogonal form for the irreducible representations of $S_n$.
+
+\begin{table}[t]
+\caption{Modules of \code{schur-weyl} v0.4.0.}
+\label{tab:sw}
+\begin{ruledtabular}
+\begin{tabular}{lp{4.6cm}}
+Module & Content \\
+\hline
+\code{young\_diagrams} & partitions $\lambda\vdash k$ (with length and part bounds), conjugation, hook lengths, dominance order, corners \\
+\code{dimensions} & $f^\lambda$ (hook length formula), $\dim\mathcal{U}^\lambda_d=s_\lambda(1,\dots,1)$ (content formula) \\
+\code{tableaux} & standard and semistandard tableaux, Kostka numbers and matrices, inverse Kostka matrices \\
+\code{symmetric\_group} & composition, inverse, cycle type, conjugacy classes and their sizes \\
+\code{character} & $\chi^\lambda(\mu)$ via Murnaghan--Nakayama, character tables \\
+\code{symmetric\_functions} & $s_\lambda$ (Jacobi--Trudi), $p_\mu$, $m_\mu$, monomials in the Schur basis \\
+\code{kronecker} & Kronecker coefficients $g(\lambda,\mu,\nu,\dots)$ as character sums \\
+\code{isotypic} & $\Pi^\lambda$ as a matrix, or applied along tensor axes \\
+\code{sw\_measure} & $\tr(\Pi^\lambda\rho^{\otimes k})$ from the spectrum of $\rho$ \\
+\code{young\_orthonormal} & Young's orthogonal form, Jucys--Murphy elements \\
+\code{schur\_transform} & full Schur transform on $(\C^d)^{\otimes n}$ \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+%==========================================================================
+\section{Worked example}\label{sec:example}
+%==========================================================================
+
+The listing below combines both packages to reproduce the first step of the
+method of Ref.~\cite{mainpaper}. It takes the $3\times3$ Horodecki state with
+$a=0.5$, computes Alice's marginal $\rho_A$, and checks (i) the weak Schur
+sampling identity $\tr(\Pi^\lambda\rho_A^{\otimes3})=f^\lambda
+s_\lambda(\spec\rho_A)$ for all $\lambda\vdash3$, and (ii) that the linear
+entropy $S_L=1-p_2$, lifted to degree $3$ as $p_{(1,1,1)}-p_{(2,1)}$, is
+reproduced by the observable $O_P=\sum_\lambda (c_\lambda/f^\lambda)\Pi^\lambda$
+with Schur coefficients $c_\lambda$ obtained from the characters.
+
+\begin{lstlisting}
+import numpy as np
+from bound_entangled.c3_otimes_c3 import horodecki
+from schur_weyl import (partitions, dim_specht,
+    schur_polynomial, isotypic_proj)
+from schur_weyl.character import character
+
+rho = horodecki(0.5)            # 3x3 PPT entangled
+rA = np.einsum("ijkj->ik", rho.reshape(3, 3, 3, 3))
+spec = list(np.linalg.eigvalsh(rA))
+rA3 = np.kron(np.kron(rA, rA), rA)
+
+# (i) tr(Pi^lam rA^{x3}) = f^lam s_lam(spec rA)
+for lam in partitions(3):
+    lhs = np.trace(isotypic_proj(lam, 3) @ rA3).real
+    rhs = dim_specht(lam) * schur_polynomial(lam, spec)
+    print(lam, round(lhs, 12), round(rhs, 12))
+
+# (ii) S_L = 1 - p_2 = p_(1,1,1) - p_(2,1) at k = 3
+c = {lam: character(lam, (1, 1, 1))
+          - character(lam, (2, 1)) for lam in partitions(3)}
+O_P = sum(c[l] / dim_specht(l) * isotypic_proj(l, 3)
+          for l in partitions(3))
+print(c, np.trace(O_P @ rA3).real,
+      1 - np.trace(rA @ rA).real)
+\end{lstlisting}
+
+The output is
+\begin{lstlisting}[language={}]
+(3,) 0.376 0.376
+(2, 1) 0.588 0.588
+(1, 1, 1) 0.036 0.036
+{(3,): 0, (2, 1): 2, (1, 1, 1): 2} 0.66 0.66
+\end{lstlisting}
+(the last two numbers agree to $10^{-16}$). The coefficients
+$c_\lambda=(0,2,2)$ give $S_L=2s_{(2,1)}+2s_{(1,1,1)}$ on normalized spectra,
+and $O_P\otimes\one_B$ is the objective of the level-3 SDP of
+Ref.~\cite{mainpaper} for the linear entropy.
+
+Similarly, applying $\Pi^{(1,1,1)}$ to Alice's three copies of a pure state
+with \code{apply\_isotypic\_proj} gives
+$\tr\big[(\Pi^{(1,1,1)}_A\otimes\one_B)\,\psi^{\otimes3}\big]$ equal to
+$4\times10^{-18}$ for a random state of Schmidt rank $2$ and $1.0\times10^{-2}$
+for Schmidt rank $3$, in agreement with the Schmidt-rank test of
+Ref.~\cite{Christandl2005}.
+
+%==========================================================================
+\section{Testing}\label{sec:tests}
+%==========================================================================
+
+Both packages are tested with \code{pytest}, and most tests in
+\code{bound-entangled} live in the docstrings. Every state factory is checked
+to return a valid density matrix (Hermitian, positive semidefinite, unit
+trace) that is PPT and entangled, the latter using the separability checks of
+\code{toqito}~\cite{toqito}, which is installed only with the test extra.
+Table~\ref{tab:states} reproduces these properties independently.
+
+\code{schur-weyl} is tested against identities with independently known
+values: $\sum_{\lambda\vdash k}(f^\lambda)^2=k!$; the completeness relation
+$\sum_\lambda\Pi^\lambda=\one$ and idempotence $(\Pi^\lambda)^2=\Pi^\lambda$;
+row and column orthogonality of the character tables; the agreement between
+$\dim\mathcal{U}^\lambda_d$, $s_\lambda(1,\dots,1)$ and the number of
+semistandard tableaux; the identity $\sum_\lambda f^\lambda
+s_\lambda(\alpha)=(\sum_i\alpha_i)^k$ behind the Schur--Weyl measure; small
+Kronecker coefficients; and the block structure of the Schur transform.
+\anton{check this list against the actual test suite}
+
+%==========================================================================
+\section{Availability}
+%==========================================================================
+
+Both packages require Python $\ge3.9$ and are installed with
+\begin{lstlisting}[language=bash]
+pip install bound-entangled schur-weyl
+\end{lstlisting}
+\begin{itemize}
+\item \code{bound-entangled} v0.2.2 \anton{new version}, MIT license,
+\url{https://github.com/AVlyx/bound-entangled}, documentation at
+\url{https://avlyx.github.io/bound-entangled/}.
+\item \code{schur-weyl} v0.4.0, MIT license,
+\url{https://github.com/AVlyx/schur-weyl}, documentation at
+\url{https://avlyx.github.io/schur-weyl/}.
+\end{itemize}
+The versions described here are archived on Zenodo~\anton{add DOIs}.
+Contributions of further states and representation-theoretic tools are
+welcome through the GitHub repositories.
+
+{\em AI statement.} \anton{}
+An initial draft was made with AI, then improved and partially  rewritten by the authors, and the final version was refined with AI.
+
+{\em Acknowledgements.} \anton{acknowledgements}
+
+\begin{thebibliography}{99}
+
+\bibitem{mainpaper} Authors, \emph{Entanglement of formation and LOCC
+conversion from Schur--Weyl duality}, in preparation. \anton{arXiv number}
+
+\bibitem{Horodecki1998} M.~Horodecki, P.~Horodecki, and R.~Horodecki,
+Phys.\ Rev.\ Lett.\ \textbf{80}, 5239 (1998).
+
+\bibitem{Peres1996} A.~Peres, Phys.\ Rev.\ Lett.\ \textbf{77}, 1413 (1996).
+
+\bibitem{Fulton1991} W.~Fulton and J.~Harris, \emph{Representation Theory: A
+First Course} (Springer, New York, 1991).
+
+\bibitem{Keyl2001} M.~Keyl and R.~F.~Werner, Phys.\ Rev.\ A \textbf{64},
+052311 (2001).
+
+\bibitem{Christandl2005} M.~Christandl and G.~Mitchison, Commun.\ Math.\
+Phys.\ \textbf{261}, 789 (2006).
+
+\bibitem{sagemath} The Sage Developers, \emph{SageMath, the Sage Mathematics
+Software System}, \url{https://www.sagemath.org}.
+
+\bibitem{be-docs} \url{https://avlyx.github.io/bound-entangled/}.
+
+\bibitem{Bennett1999UPB} C.~H.~Bennett, D.~P.~DiVincenzo, T.~Mor, P.~W.~Shor,
+J.~A.~Smolin, and B.~M.~Terhal, Phys.\ Rev.\ Lett.\ \textbf{82}, 5385 (1999),
+arXiv:quant-ph/9808030.
+
+\bibitem{toqito} V.~Russo, J.~Of.~Open Source Softw.\ \textbf{6}, 3082 (2021).
+
+\bibitem{Lockhart2018} J.~Lockhart, O.~G\"{u}hne, and S.~Severini,
+Phys.\ Rev.\ A \textbf{97}, 062340 (2018), arXiv:1705.09261.
+
+\bibitem{Krebs2024} R.~Krebs and M.~Gachechiladze, arXiv:2402.12966.
+
+\bibitem{DiVincenzo2003} D.~P.~DiVincenzo, T.~Mor, P.~W.~Shor, J.~A.~Smolin,
+and B.~M.~Terhal, Commun.\ Math.\ Phys.\ \textbf{238}, 379 (2003),
+arXiv:quant-ph/9908070.
+
+\bibitem{Smolin2001} J.~A.~Smolin, Phys.\ Rev.\ A \textbf{63}, 032306 (2001),
+arXiv:quant-ph/0001001.
+
+\bibitem{Augusiak2006} R.~Augusiak and P.~Horodecki, arXiv:quant-ph/0411142.
+\anton{journal ref if published}
+
+\bibitem{Tura2018} J.~Tura, A.~Aloy, R.~Quesada, M.~Lewenstein, and
+A.~Sanpera, Quantum \textbf{2}, 45 (2018), arXiv:1706.09423.
+
+\bibitem{Rudolph2005} O.~Rudolph, Quantum Inf.\ Process.\ \textbf{4}, 219
+(2005).
+
+\bibitem{Chen2003} K.~Chen and L.-A.~Wu, Quantum Inf.\ Comput.\ \textbf{3},
+193 (2003).
+
+\bibitem{Horodecki1997} P.~Horodecki, Phys.\ Lett.\ A \textbf{232}, 333
+(1997), arXiv:quant-ph/9703004.
+
+\bibitem{Tura2012} J.~Tura, R.~Augusiak, P.~Hyllus, M.~Ku\'s, J.~Samsonowicz,
+and M.~Lewenstein, Phys.\ Rev.\ A \textbf{85}, 060302(R) (2012),
+arXiv:1203.3711. \anton{this paper is about four-qubit symmetric PPT states;
+check it is the right source for the $2\times d$ Horodecki generalization}
+
+\bibitem{Bruss2000} D.~Bru\ss{} and A.~Peres, Phys.\ Rev.\ A \textbf{61},
+030301(R) (2000), arXiv:quant-ph/9911056.
+
+\bibitem{Vertesi2014} T.~V\'ertesi and N.~Brunner, Nat.\ Commun.\ \textbf{5},
+5297 (2014).
+
+\bibitem{Moroder2014} T.~Moroder, O.~Gittsovich, M.~Huber, and O.~G\"{u}hne,
+Phys.\ Rev.\ Lett.\ \textbf{113}, 050404 (2014), arXiv:1405.0262.
+
+\bibitem{YuOh2017} S.~Yu and C.~H.~Oh, Phys.\ Rev.\ A \textbf{95}, 032111
+(2017), arXiv:1509.08991.
+
+\bibitem{Benatti2004} F.~Benatti, R.~Floreanini, and M.~Piani,
+arXiv:quant-ph/0411095. \anton{journal ref}
+
+\bibitem{Pal2021} K.~F.~P\'al, G.~T\'oth, E.~Bene, and T.~V\'ertesi,
+Phys.\ Rev.\ Research \textbf{3}, 023101 (2021).
+
+\end{thebibliography}
+
+\end{document}
