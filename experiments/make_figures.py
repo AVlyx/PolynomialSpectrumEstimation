@@ -98,6 +98,7 @@ def reference(entry: dict, measure: str) -> float | None:
     return min(values) if values else None
 
 
+MAIN_STATES = ["tiles", "pyramid", "chessboard", "ncomms", "piani", "gisin", "mems"]  # single-column E_F figure
 OPTIONAL_LEVELS = {"2,4"}  # nan (no bar) for states without this level
 
 
@@ -119,10 +120,11 @@ def positions(named) -> list[float]:
     return xs
 
 
-def named_csv(measure: str) -> None:
+def named_csv(measure: str, keys: list[str] | None = None, name: str | None = None) -> None:
     """Raw bounds per state; the bar charts divide them by `ref` (printed as `ref_label` at height `label_y`, above the
-    markers, over each state)."""
-    named = [(k, e) for k, e in load_named() if complete(e, measure) and (reference(e, measure) or 0) > 1e-9]
+    markers, over each state). `keys` restricts to these states (written to `name`); `lb_best` is the best level."""
+    named = [(k, e) for k, e in load_named() if complete(e, measure) and (reference(e, measure) or 0) > 1e-9
+             and (keys is None or k in keys)]
     if not named:
         return
     rows = []
@@ -134,10 +136,11 @@ def named_csv(measure: str) -> None:
                       f" the axis")
         lbs = [e.get(f"{measure}/lower/{level}", {}).get("value") for level in LEVELS]
         label_y = max([1.06] + [v / ref + 0.04 for v in (ub["extract"], ub["hjw"]) if v is not None])
-        rows.append([e["info"]["label"], e["info"]["group"], x, *lbs, ub["extract"], ub["hjw"], ref,
+        best = max((v for v in lbs if v is not None), default=None)
+        rows.append([e["info"]["label"], e["info"]["group"], x, *lbs, best, ub["extract"], ub["hjw"], ref,
                      fmt(ref) + ("^*" if ub["exact"] is not None else ""), round(label_y, 3)])
-    write_csv(f"named_{measure}.csv", ["state", "group", "pos", *map(column, LEVELS), "ub_extract", "ub_hjw", "ref",
-                                       "ref_label", "label_y"], rows)
+    write_csv(name or f"named_{measure}.csv", ["state", "group", "pos", *map(column, LEVELS), "lb_best", "ub_extract",
+                                               "ub_hjw", "ref", "ref_label", "label_y"], rows)
 
 
 def upper_bounds_csv() -> None:
@@ -324,6 +327,7 @@ if __name__ == "__main__":
     linear_entropy_csv()
     for measure in ("SL", "EF", "E1"):
         named_csv(measure)
+    named_csv("EF", MAIN_STATES, "named_EF_main.csv")
     upper_bounds_csv()
     polynomials_csv()
     locc_csv()
