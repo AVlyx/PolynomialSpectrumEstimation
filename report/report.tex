@@ -1,0 +1,216 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amsthm, amssymb, amsfonts, enumitem}
+\usepackage{graphicx}
+\usepackage{dsfont}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots,statistics}
+\usepackage{xcolor}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+\usepackage{physics}
+
+% Same macros as the paper, so equations and figures can be copied across.
+\DeclareMathOperator{\spec}{spec}
+\newcommand{\ot}{\otimes}
+\newcommand{\one}{\mathds{1}}
+\newcommand{\I}{\one}
+\renewcommand{\a}{\alpha}
+\renewcommand{\b}{\beta}
+\newcommand{\N}{\mathds{N}}
+\newcommand{\C}{\mathds{C}}
+\newcommand{\cdk}{(\C^d)^{\otimes k}}
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{result}[theorem]{Result}
+\newtheorem{observation}[theorem]{Observation}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+% Writing guidance. Delete every \note{...} before handing in;
+% set \notesfalse to hide them all at once.
+\newif\ifnotes \notestrue
+\newcommand{\note}[1]{\ifnotes\par\medskip\noindent\fcolorbox{gray!60}{gray!8}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{To write.} #1}}\par\medskip\fi}
+
+\begin{document}
+
+% =====================================================================
+\begin{titlepage}
+\centering
+{\large Master's internship report\par}
+\vspace{1.5cm}
+{\LARGE\bfseries Entanglement measures and LOCC conversion criteria\\ from Schur--Weyl duality\par}
+\vspace{1.5cm}
+{\Large Anton van Cleemput\par}
+\vspace{1cm}
+Master's programme: \textcolor{red}{[programme, university]}\par
+Host laboratory: \textcolor{red}{[lab, institution]}\par
+Supervisors: \textcolor{red}{[names]}\par
+Internship period: \textcolor{red}{[start]} -- \textcolor{red}{[end]} 2026\par
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+% =====================================================================
+\begin{abstract}
+\note{Write this last. About 150--250 words: the problem (quantifying entanglement and LOCC convertibility of mixed states), the approach (SDP hierarchy over entanglement spectra via Schur--Weyl duality), what you obtained (convergent bounds for any measure, Schmidt-number certificates, LOCC non-convertibility certificates, upper bounds from extracted decompositions), and the outputs of the internship (the arXiv preprint~\cite{ourPaper} and the two published libraries~\cite{boundEntangled,schurWeyl}).}
+\end{abstract}
+
+\chapter*{Acknowledgements}
+\note{Supervisors, co-authors, the people thanked in the paper (Sophia Denker, Kenneth Goodenough, Ladina Hausmann, Renato Renner, Karol \.Zyczkowski), the host lab, and the funding. Keep the AI statement consistent with the paper's (see the end of the conclusion chapter).}
+
+\tableofcontents
+
+% =====================================================================
+\chapter{Introduction}\label{ch:intro}
+
+\section{Context}
+\note{Why entanglement matters as a resource; pure states are fully understood through the entanglement spectrum (Nielsen~\cite{Nielsen1999MajLOCC}, Vidal~\cite{Vidal_1999,Vidal_2000}); mixed states need convex roofs, which are hard to compute~\cite{Bennett1996EoF,Uhlmann2010Roofs}. The paper's introduction is a good compressed version: expand it for a reader who is a physicist but not a quantum information specialist.}
+
+\section{Goal of the internship}
+\note{The question you started with in May (Schmidt number from isotypic projectors, see \texttt{material.md} \S1) and how it grew into the general method of the paper.}
+
+\section{Contributions}
+\note{A list. Separate clearly: (i) your own contributions, (ii) joint work with co-authors, (iii) the published outputs: the preprint~\cite{ourPaper}, \texttt{bound-entangled}~\cite{boundEntangled}, \texttt{schur-weyl}~\cite{schurWeyl}. Check the split with your supervisors (\texttt{material.md} \S2 and \S8).}
+
+\section{Outline}
+\note{One sentence per chapter.}
+
+% =====================================================================
+\chapter{Background}\label{ch:background}
+
+\section{Entanglement, LOCC and the entanglement spectrum}
+\note{Schmidt decomposition, Schmidt rank, Nielsen's majorization theorem~\cite{Nielsen1999MajLOCC}, Vidal monotones~\cite{Vidal_1999}, the Jonathan--Plenio criterion for pure-to-ensemble conversion~\cite{Jonathan_1999}. A worked two-qubit example helps.}
+
+\section{Mixed states and convex roofs}
+\note{Convex roof extension, entanglement of formation~\cite{Bennett1996EoF}, Wootters' formula for two qubits~\cite{Wootters1998} (which you use as ground truth), Schmidt number~\cite{Terhal_2000}, why the optimization is hard. The HJW / Schr\"odinger parametrisation of decompositions~\cite{schrodinger36,HJW}.}
+
+\section{Semidefinite programming}
+\note{Primal and dual, weak and strong duality, interior-point solvers. The symmetric-extension hierarchy for separability~\cite{doherty2002} as the closest known analogue of your hierarchy.}
+
+\section{Symmetric polynomials and Schur--Weyl duality}
+\note{Partitions and Young diagrams, the Schur--Weyl decomposition~\cite{fulton2013representation}, isotypic projectors, Schur polynomials and Kostka numbers~\cite{MacdonaldSymmFunc}, weak Schur sampling~\cite{Alicki1988,Keyl2001EstimatingSpectrum}. This is where the paper is most compressed, so it is the best place to show understanding. Small examples: $k=2$ (symmetric and antisymmetric subspaces), $k=3$ with $\lambda=(2,1)$.}
+
+\section{Bound entangled states}
+\note{What bound entanglement is, the families used in the experiments (Horodecki, chessboard, UPB-based states such as tiles and pyramid, Piani, \dots), and how your \texttt{bound-entangled} package collects them~\cite{boundEntangled}.}
+
+% =====================================================================
+\chapter{First phase: Schmidt number from isotypic projectors}\label{ch:phase1}
+\note{May--September, project \texttt{QuantifyingSchmidtNumber} (\texttt{material.md} \S1). The SDP with a single isotypic projector as objective, the $E_t$ bounds, the state sweeps (convex mixtures, noise, parametric families), binary searches for thresholds, the Tavakoli and isotropic Schmidt-number-3 results, the cluster runs and the results viewer. Explain what you learned that led to the general method of Chapter~\ref{ch:method}. A figure from \texttt{sdp\_results/} would fit here.}
+
+% =====================================================================
+\chapter{Method}\label{ch:method}
+\note{The paper's main text, with more intuition before each formal statement. Proofs can be summarised and referred to the preprint~\cite{ourPaper}; give at least one proof in full (for example the convergence of the hierarchy) to show you master it. The key equations are copied from the paper so that labels and figure captions work.}
+
+\section{Polynomial measures as linear functionals}
+\note{Schur basis, the observable $O_P$, the decomposition state $\omega_k=\sum_ip_i\dyad{\psi_i}^{\otimes k}$~\cite{Toth2015CroofTP}.}
+
+\section{The SDP hierarchy}
+\begin{align}
+    P_{{\rm LB}_k}(\rho)=\min_{\Omega_k} \ &\tr\!\left(O_P^A \otimes \I^B \, \Omega_k\right)\label{eq:SDPcroof1}\\
+    \text{s.t. } & \Omega_k \succeq 0, \nonumber\\
+    & \Pi_\text{sym}^{AB,k} \, \Omega_k = \Omega_k\,\Pi_\text{sym}^{AB,k}  = \Omega_k,\nonumber\\
+    & \tr_{2,\dots,k} (\Omega_k) = \rho, \nonumber\\
+    & \Omega_k^{T_l} \succeq 0 \quad  \forall \, l \in \{1, \dots, \lfloor \tfrac{k}{2}\rfloor\}.\nonumber
+\end{align}
+\note{Convergence via the de Finetti theorem~\cite{Christandl_2007} and continuity of the convex roof~\cite{Bucicovschi2013}; monotonicity in $k$; the Schmidt-number certificate and the example of Ref.~\cite{Tavakoli_2024}.}
+
+\section{The simplified relaxation}
+\begin{align}\label{eq:marginals_SDP}
+    P_{{\rm LB}_{k,m}}:=&\min_{\Phi_{k,m}} \tr(O_P^A \otimes \I^B \ \Phi_{k,m})\\
+    \text{s.t. } & \Phi_{k,m}\succeq 0, \nonumber\\
+    & \Pi_\text{sym}^{AB,k} \, \Phi_{k}\, \Pi_\text{sym}^{AB,k}= \Phi_{k},\nonumber\\
+    & \tr_{A_2,\dots,A_m,B_2,\dots,B_k} (\Phi_{k,m}) = \rho_{AB}, \nonumber\\
+    & \tr_{B_1,\dots,B_k}(\Phi_{k,m}) \text{ is permutation invariant},\nonumber\\
+    & \Phi_{k,m}^{T_S} \succeq 0 \quad  \forall \, S.\nonumber
+\end{align}
+\note{Why it is cheaper for full-rank states; the trade-off is quantified in Chapter~\ref{ch:implementation}.}
+
+\section{Upper bounds from the SDP solution}
+\note{Extraction: rank reduction, Jennrich~\cite{Harshman1970,Leurgans1993}, PARAFAC~\cite{CarrollChang1970,tensorly}, the repair step $\rho^{1/2}\sigma^{-1/2}$, uniqueness~\cite{Kruskal1977}. Gradient descent over HJW unitaries~\cite{HJW,Rothlisberger2009} as the comparison. The tightness certificate (\texttt{material.md} \S4).}
+
+\section{Non-polynomial measures}
+\note{The grid, the LP and its dual, merging into one SDP, the grid error, convergence (Weierstrass). Figure~\ref{fig:grid} explains the grid. The comparison of polynomial classes (A, B, C) is in \texttt{material.md} \S4 and is not in the paper.}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{figures/grid_simplex}
+    \caption{Grid discretization of the simplex of spectra for $d_A=3$.
+    (a) Different values of $F(\alpha)$ are denoted by different colors. The dots denote the grid $G$, separated by a certain distance $1/m$. Since entanglement measures are symmetric functions on the spectrum, only the points with $\alpha_1\geq\alpha_2\geq\alpha_3$ (dashed region, filled dots) need to be imposed.
+    (b) Cut along a one-parameter family of spectra. Although $P^*\leq F$ holds at all grid points, it is possible that $P^*>F$ between any two points by a value $\epsilon$. This value decreases as we refine the grid.}
+    \label{fig:grid}
+\end{figure}
+
+\section{LOCC convertibility}
+\begin{align}\label{eq:LOCCminmaxt}
+    s_k=\min_{\Omega_k} \max_t \max_{P_j\in\mathcal{P}_j}\ \sum_j t_j\Big(\tr\left((O_{P_j}\otimes\I^B)\Omega_k\right)-E_j(\psi)\Big),
+\end{align}
+\note{Joint constraints for all Vidal monotones, the certificate of non-convertibility, the heuristic for convertibility by extraction, and why extraction can fail here.}
+
+% =====================================================================
+\chapter{Implementation}\label{ch:implementation}
+\note{The chapter where most of your internship time shows. Use \texttt{material.md} \S3.}
+
+\section{Software architecture}
+\note{Layout of \texttt{src/} and \texttt{experiments/}, the test suite with brute-force cross-checks, resumable result files, the figure pipeline (scripts $\to$ CSV $\to$ pgfplots). A diagram would help.}
+
+\section{Symmetry reductions}
+\note{Symmetric subspace, bosonic operators for the marginal constraint, partial transposes on $\mathrm{Sym}^l\otimes\mathrm{Sym}^{k-l}$, projection on the support of $\rho$, real variables (paper App.~D). Add the caveat that a real $\rho$ does not imply a real optimal decomposition.}
+
+\section{Solvers and numerical issues}
+\note{From picos to a native sparse QICS model~\cite{qics} (memory 15\,GB $\to$ 3\,GB); the pitfalls you hit and how you fixed them (\texttt{material.md} \S3).}
+
+\section{Memory cost}
+\note{The variable-count formula, the $8n^2$ model, the rule $r<(k+1)r_A-k$, the measurement pitfall you caught, and Fig.~\ref{fig:memory}.}
+\input{figures/fig_memory}
+
+\section{Libraries}
+\note{\texttt{bound-entangled}~\cite{boundEntangled} and \texttt{schur-weyl}~\cite{schurWeyl}: why you wrote them, design choices (numpy only, tests, documentation sites, PyPI publishing workflow), and how the main code uses them.}
+
+% =====================================================================
+\chapter{Results}\label{ch:results}
+\note{The paper's figures with more discussion of each, plus results not in the paper (\texttt{material.md} \S4). Say for each figure what the reader should take away.}
+
+\section{Linear entropy}
+\input{figures/fig_linear_entropy}
+\input{figures/fig_named_linear_entropy}
+
+\section{Entanglement of formation}
+\input{figures/fig_EoF_main}
+\input{figures/fig_EoF}
+
+\section{Vidal monotones and adaptive polynomials}
+\input{figures/fig_Vidal}
+\input{figures/fig_polynomials}
+
+\section{LOCC convertibility}
+\input{figures/fig_locc}
+
+% =====================================================================
+\chapter{Negative results and lessons learned}\label{ch:lessons}
+\note{From \texttt{material.md} \S5: the PPT variant on $\tr_B\Phi$, TensorLy without Jennrich initialisation, random-start least squares, gradient descent beating extraction for $E_F$, the LOCC SDP needing coefficient bounds, the memory-measurement pitfall. For each one: what you expected, what happened, what you concluded. Also what you would do differently (for example, version control habits after the lost commit).}
+
+% =====================================================================
+\chapter{Conclusion and outlook}\label{ch:conclusion}
+\note{Summary of what was achieved; open problems (multipartite case~\cite{Sauerwein_2018}, experimental routes from your notes in \texttt{Motivation.tex}, monotonicity of the corrected bound); what you learned (methods, tools, research practice).}
+
+\section*{Use of AI tools}
+\note{Consistent with the paper's AI statement and your programme's policy.}
+
+% =====================================================================
+\appendix
+\chapter{Timeline of the internship}\label{app:timeline}
+\note{A table or Gantt-style figure from \texttt{material.md} \S1.}
+
+\chapter{Proofs}\label{app:proofs}
+\note{Either refer to the appendices of the preprint~\cite{ourPaper}, or reproduce the ones you consider central.}
+
+\bibliographystyle{ieeetr}
+\bibliography{Bibliography}
+
+\end{document}

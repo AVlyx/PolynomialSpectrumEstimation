@@ -1,0 +1,272 @@
+\begin{thebibliography}{10}
+
+\bibitem{epr}
+A.~Einstein, B.~Podolsky, and N.~Rosen, ``Can quantum-mechanical description of
+  physical reality be considered complete?,'' {\em Physical Review}, vol.~47,
+  no.~10, pp.~777--780, 1935.
+
+\bibitem{distributed}
+J.~I. Cirac, A.~K. Ekert, S.~F. Huelga, and C.~Macchiavello, ``Distributed
+  quantum computation over noisy channels,'' {\em Physical Review A}, vol.~59,
+  no.~6, pp.~4249--4254, 1999.
+
+\bibitem{eckert}
+A.~K. Ekert, ``Quantum cryptography based on {B}ell's theorem,'' {\em Physical
+  Review Letters}, vol.~67, no.~6, pp.~661--663, 1991.
+
+\bibitem{one-way}
+R.~Raussendorf and H.~J. Briegel, ``A one-way quantum computer,'' {\em Physical
+  Review Letters}, vol.~86, no.~22, pp.~5188--5191, 2001.
+
+\bibitem{shor}
+P.~W. Shor, ``Polynomial-time algorithms for prime factorization and discrete
+  logarithms on a quantum computer,'' {\em SIAM Journal on Computing}, vol.~26,
+  no.~5, pp.~1484--1509, 1997.
+
+\bibitem{Nielsen1999MajLOCC}
+M.~A. Nielsen, ``Conditions for a class of entanglement transformations,'' {\em
+  Physical Review Letters}, vol.~83, no.~2, pp.~436--439, 1999.
+
+\bibitem{Vidal_2000}
+G.~Vidal, ``Entanglement monotones,'' {\em Journal of Modern Optics}, vol.~47,
+  no.~2-3, pp.~355--376, 2000.
+
+\bibitem{Zurek2003}
+W.~H. Zurek, ``Decoherence, einselection, and the quantum origins of the
+  classical,'' {\em Reviews of Modern Physics}, vol.~75, no.~3, pp.~715--775,
+  2003.
+
+\bibitem{BreuerPetruccione2002}
+H.-P. Breuer and F.~Petruccione, {\em The Theory of Open Quantum Systems}.
+\newblock Oxford: Oxford University Press, 2002.
+
+\bibitem{NielsenChuang2010}
+M.~A. Nielsen and I.~L. Chuang, {\em Quantum Computation and Quantum
+  Information}.
+\newblock Cambridge: Cambridge University Press, 10th anniversary~ed., 2010.
+
+\bibitem{Bennett1996EoF}
+C.~H. Bennett, D.~P. DiVincenzo, J.~A. Smolin, and W.~K. Wootters,
+  ``Mixed-state entanglement and quantum error correction,'' {\em Physical
+  Review A}, vol.~54, no.~5, pp.~3824--3851, 1996.
+
+\bibitem{Uhlmann1998}
+A.~Uhlmann, ``Entropy and optimal decompositions of states relative to a
+  maximal commutative subalgebra,'' {\em Open Systems \& Information Dynamics},
+  vol.~5, no.~3, pp.~209--228, 1998.
+
+\bibitem{Uhlmann2010Roofs}
+A.~Uhlmann, ``Roofs and convexity,'' {\em Entropy}, vol.~12, no.~7,
+  pp.~1799--1832, 2010.
+
+\bibitem{Horodecki2009RMP}
+R.~Horodecki, P.~Horodecki, M.~Horodecki, and K.~Horodecki, ``Quantum
+  entanglement,'' {\em Reviews of Modern Physics}, vol.~81, no.~2,
+  pp.~865--942, 2009.
+
+\bibitem{Wootters1998}
+W.~K. Wootters, ``Entanglement of formation of an arbitrary state of two
+  qubits,'' {\em Physical Review Letters}, vol.~80, no.~10, pp.~2245--2248,
+  1998.
+
+\bibitem{TerhalVollbrecht2000}
+B.~M. Terhal and K.~G.~H. Vollbrecht, ``Entanglement of formation for isotropic
+  states,'' {\em Physical Review Letters}, vol.~85, no.~12, pp.~2625--2628,
+  2000.
+
+\bibitem{VollbrechtWerner2001}
+K.~G.~H. Vollbrecht and R.~F. Werner, ``Entanglement measures under symmetry,''
+  {\em Physical Review A}, vol.~64, no.~6, p.~062307, 2001.
+
+\bibitem{Mintert2004Concurrence}
+F.~Mintert, M.~Ku{\'s}, and A.~Buchleitner, ``Concurrence of mixed bipartite
+  quantum states in arbitrary dimensions,'' {\em Physical Review Letters},
+  vol.~92, no.~16, p.~167902, 2004.
+
+\bibitem{Chen2005Concurrence}
+K.~Chen, S.~Albeverio, and S.-M. Fei, ``Concurrence of arbitrary dimensional
+  bipartite quantum states,'' {\em Physical Review Letters}, vol.~95, no.~4,
+  p.~040504, 2005.
+
+\bibitem{Chen2005EoF}
+K.~Chen, S.~Albeverio, and S.-M. Fei, ``Entanglement of formation of bipartite
+  quantum states,'' {\em Physical Review Letters}, vol.~95, no.~21, p.~210501,
+  2005.
+
+\bibitem{Guhne2007Estimating}
+O.~G{\"u}hne, M.~Reimpell, and R.~F. Werner, ``Estimating entanglement measures
+  in experiments,'' {\em Physical Review Letters}, vol.~98, no.~11, p.~110502,
+  2007.
+
+\bibitem{Eisert2007QuantWitness}
+J.~Eisert, F.~G. S.~L. Brand{\~a}o, and K.~M.~R. Audenaert, ``Quantitative
+  entanglement witnesses,'' {\em New Journal of Physics}, vol.~9, no.~3, p.~46,
+  2007.
+
+\bibitem{Toth2015CroofTP}
+G.~T\'oth, T.~Moroder, and O.~G\"uhne, ``Evaluating convex roof entanglement
+  measures,'' {\em Physical Review Letters}, vol.~114, no.~16, p.~160501, 2015.
+
+\bibitem{PlenioVirmani2007}
+M.~B. Plenio and S.~Virmani, ``An introduction to entanglement measures,'' {\em
+  Quantum Information and Computation}, vol.~7, no.~1-2, pp.~1--51, 2007.
+
+\bibitem{Gour2005InfiniteConditions}
+G.~Gour, ``Infinite number of conditions for local mixed-state manipulations,''
+  {\em Physical Review A}, vol.~72, no.~2, p.~022323, 2005.
+
+\bibitem{Chitambar2014LOCC}
+E.~Chitambar, D.~Leung, L.~Man{\v{c}}inska, M.~Ozols, and A.~Winter,
+  ``Everything you always wanted to know about {LOCC} (but were afraid to
+  ask),'' {\em Communications in Mathematical Physics}, vol.~328, no.~1,
+  pp.~303--326, 2014.
+
+\bibitem{Sauerwein_2018}
+D.~Sauerwein, N.~R. Wallach, G.~Gour, and B.~Kraus, ``Transformations among
+  pure multipartite entangled states via local operations are almost never
+  possible,'' {\em Physical Review X}, vol.~8, no.~3, p.~031020, 2018.
+
+\bibitem{Alicki1988}
+R.~Alicki, S.~Rudnicki, and S.~Sadowski, ``Symmetry properties of product
+  states for the system of {N} n-level atoms,'' {\em Journal of Mathematical
+  Physics}, vol.~29, no.~5, pp.~1158--1162, 1988.
+
+\bibitem{Keyl2001EstimatingSpectrum}
+M.~Keyl and R.~F. Werner, ``Estimating the spectrum of a density operator,''
+  {\em Physical Review A}, vol.~64, no.~5, p.~052311, 2001.
+
+\bibitem{Vidal_1999}
+G.~Vidal, ``Entanglement of pure states for a single copy,'' {\em Physical
+  Review Letters}, vol.~83, no.~5, pp.~1046--1049, 1999.
+
+\bibitem{fulton2013representation}
+W.~Fulton and J.~Harris, {\em Representation Theory: A First Course}, vol.~129
+  of {\em Graduate Texts in Mathematics}.
+\newblock New York: Springer, 1991.
+
+\bibitem{MacdonaldSymmFunc}
+I.~G. Macdonald, {\em Symmetric Functions and {H}all Polynomials}.
+\newblock Oxford Mathematical Monographs, Oxford: Clarendon Press, 2nd~ed.,
+  1995.
+
+\bibitem{doherty2002}
+A.~C. Doherty, P.~A. Parrilo, and F.~M. Spedalieri, ``Distinguishing separable
+  and entangled states,'' {\em Physical Review Letters}, vol.~88, no.~18,
+  p.~187904, 2002.
+
+\bibitem{caves2002unknown}
+C.~M. Caves, C.~A. Fuchs, and R.~Schack, ``Unknown quantum states: The quantum
+  de {F}inetti representation,'' {\em Journal of Mathematical Physics},
+  vol.~43, no.~9, pp.~4537--4559, 2002.
+
+\bibitem{Christandl_2007}
+M.~Christandl, R.~K{\"o}nig, G.~Mitchison, and R.~Renner, ``One-and-a-half
+  quantum de {F}inetti theorems,'' {\em Communications in Mathematical
+  Physics}, vol.~273, no.~2, pp.~473--498, 2007.
+
+\bibitem{Terhal_2000}
+B.~M. Terhal and P.~Horodecki, ``{S}chmidt number for density matrices,'' {\em
+  Physical Review A}, vol.~61, no.~4, p.~040301, 2000.
+
+\bibitem{Christandl_2005}
+M.~Christandl and G.~Mitchison, ``The spectra of quantum states and the
+  {K}ronecker coefficients of the symmetric group,'' {\em Communications in
+  Mathematical Physics}, vol.~261, no.~3, pp.~789--797, 2005.
+
+\bibitem{lovitz2026TreeTNtest}
+B.~Lovitz and A.~Lowe, ``Nearly tight bounds for testing tree tensor network
+  states,'' {\em IEEE Transactions on Information Theory}, vol.~72, no.~5,
+  pp.~3074--3097, 2026.
+
+\bibitem{Tavakoli_2024}
+A.~Tavakoli and S.~Morelli, ``Enhanced {S}chmidt-number criteria based on
+  correlation trace norms,'' {\em Physical Review A}, vol.~110, no.~6,
+  p.~062417, 2024.
+
+\bibitem{Kruskal1977}
+J.~B. Kruskal, ``Three-way arrays: rank and uniqueness of trilinear
+  decompositions, with application to arithmetic complexity and statistics,''
+  {\em Linear Algebra and its Applications}, vol.~18, no.~2, pp.~95--138, 1977.
+
+\bibitem{Harshman1970}
+R.~A. Harshman, ``Foundations of the {PARAFAC} procedure: Models and conditions
+  for an ``explanatory'' multimodal factor analysis,'' {\em UCLA Working Papers
+  in Phonetics}, vol.~16, pp.~1--84, 1970.
+
+\bibitem{Leurgans1993}
+S.~E. Leurgans, R.~T. Ross, and R.~B. Abel, ``A decomposition for three-way
+  arrays,'' {\em SIAM Journal on Matrix Analysis and Applications}, vol.~14,
+  no.~4, pp.~1064--1083, 1993.
+
+\bibitem{CarrollChang1970}
+J.~D. Carroll and J.-J. Chang, ``Analysis of individual differences in
+  multidimensional scaling via an {N}-way generalization of ``{Eckart-Young}''
+  decomposition,'' {\em Psychometrika}, vol.~35, no.~3, pp.~283--319, 1970.
+
+\bibitem{tensorly}
+J.~Kossaifi, Y.~Panagakis, A.~Anandkumar, and M.~Pantic, ``{TensorLy}: Tensor
+  learning in {Python},'' {\em Journal of Machine Learning Research}, vol.~20,
+  no.~26, pp.~1--6, 2019.
+
+\bibitem{schrodinger36}
+E.~Schr{\"o}dinger, ``Probability relations between separated systems,'' {\em
+  Mathematical Proceedings of the Cambridge Philosophical Society}, vol.~32,
+  no.~3, pp.~446--452, 1936.
+
+\bibitem{jaynes57}
+E.~T. Jaynes, ``Information theory and statistical mechanics. {II},'' {\em
+  Physical Review}, vol.~108, no.~2, pp.~171--190, 1957.
+
+\bibitem{gisin89}
+N.~Gisin, ``Stochastic quantum dynamics and relativity,'' {\em Helvetica
+  Physica Acta}, vol.~62, no.~4, pp.~363--371, 1989.
+
+\bibitem{HJW}
+L.~P. Hughston, R.~Jozsa, and W.~K. Wootters, ``A complete classification of
+  quantum ensembles having a given density matrix,'' {\em Physics Letters A},
+  vol.~183, no.~1, pp.~14--18, 1993.
+
+\bibitem{kirkpatrick06}
+K.~A. Kirkpatrick, ``The {S}chr{\"o}dinger-{HJW} theorem,'' {\em Foundations of
+  Physics Letters}, vol.~19, no.~1, pp.~95--102, 2006.
+
+\bibitem{Jonathan_1999}
+D.~Jonathan and M.~B. Plenio, ``Minimal conditions for local pure-state
+  entanglement manipulation,'' {\em Physical Review Letters}, vol.~83, no.~7,
+  pp.~1455--1458, 1999.
+
+\bibitem{Bucicovschi2013}
+O.~Bucicovschi and J.~Lebl, ``On the continuity and regularity of convex
+  extensions,'' {\em Journal of Convex Analysis}, vol.~20, no.~4,
+  pp.~1113--1126, 2013.
+
+\bibitem{Navascues2009}
+M.~Navascu{\'e}s, M.~Owari, and M.~B. Plenio, ``Power of symmetric extensions
+  for entanglement detection,'' {\em Physical Review A}, vol.~80, no.~5,
+  p.~052306, 2009.
+
+\bibitem{Sion1958}
+M.~Sion, ``On general minimax theorems,'' {\em Pacific Journal of Mathematics},
+  vol.~8, no.~1, pp.~171--176, 1958.
+
+\bibitem{qics}
+K.~He, J.~Saunderson, and H.~Fawzi, ``{QICS}: Quantum information conic
+  solver,'' 2024.
+\newblock arXiv:2410.17803.
+
+\bibitem{boundEntangled}
+A.~Van~Cleemput, ``bound-entangled: {R}eference implementations of bound
+  entangled states.'' \url{https://github.com/AVlyx/bound-entangled}, 2026.
+\newblock Python package, version 0.2.2.
+
+\bibitem{toqito}
+V.~Russo, ``toqito -- {T}heory of quantum information toolkit: {A} {P}ython
+  package for studying quantum information,'' {\em Journal of Open Source
+  Software}, vol.~6, no.~61, p.~3082, 2021.
+
+\bibitem{Rothlisberger2009}
+B.~R\"othlisberger, J.~Lehmann, and D.~Loss, ``Numerical evaluation of
+  convex-roof entanglement measures with applications to spin rings,'' {\em
+  Physical Review A}, vol.~80, no.~4, p.~042301, 2009.
+
+\end{thebibliography}

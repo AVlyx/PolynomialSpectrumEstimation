@@ -1,0 +1,45 @@
+\contentsline {chapter}{\numberline {1}Introduction}{3}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Background}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Entanglement spectrum}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Schur--Weyl duality}{5}{section.2.2}%
+\contentsline {chapter}{\numberline {3}A complete hierarchy for polynomial measures}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Polynomials of the entanglement spectrum}{7}{section.3.1}%
+\contentsline {section}{\numberline {3.2}The relaxation}{8}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Convergence}{9}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Schmidt number}{9}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Simplified relaxation}{10}{section.3.5}%
+\contentsline {chapter}{\numberline {4}Approximating the optimal decomposition}{11}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Heuristic extraction}{11}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Repair step}{11}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Upper bounds by gradient descent}{12}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Convergence of the extraction}{12}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Non-polynomial measures via linear programming}{14}{chapter.5}%
+\contentsline {chapter}{\numberline {6}LOCC convertibility}{17}{chapter.6}%
+\contentsline {chapter}{\numberline {7}Libraries}{19}{chapter.7}%
+\contentsline {section}{\numberline {7.1}\texttt {schur-weyl}}{19}{section.7.1}%
+\contentsline {section}{\numberline {7.2}\texttt {bound-entangled}}{19}{section.7.2}%
+\contentsline {chapter}{\numberline {8}Conclusions}{21}{chapter.8}%
+\contentsline {chapter}{\numberline {A}Representation theory and lifting}{22}{appendix.A}%
+\contentsline {section}{\numberline {A.1}Lifting to higher degree}{22}{section.A.1}%
+\contentsline {chapter}{\numberline {B}Proofs for the SDP hierarchy}{23}{appendix.B}%
+\contentsline {section}{\numberline {B.1}Convergence}{23}{section.B.1}%
+\contentsline {section}{\numberline {B.2}Monotonicity in the level}{23}{section.B.2}%
+\contentsline {section}{\numberline {B.3}Simplified relaxation}{23}{section.B.3}%
+\contentsline {chapter}{\numberline {C}Symmetry reductions and memory}{25}{appendix.C}%
+\contentsline {section}{\numberline {C.1}Restriction to the symmetric subspace}{25}{section.C.1}%
+\contentsline {section}{\numberline {C.2}First marginal constraint}{25}{section.C.2}%
+\contentsline {section}{\numberline {C.3}Partial-transpose constraints}{26}{section.C.3}%
+\contentsline {section}{\numberline {C.4}Real variables}{26}{section.C.4}%
+\contentsline {section}{\numberline {C.5}Projection onto the support of $\rho $}{26}{section.C.5}%
+\contentsline {section}{\numberline {C.6}Memory cost}{27}{section.C.6}%
+\contentsline {chapter}{\numberline {D}Extraction of decompositions}{28}{appendix.D}%
+\contentsline {section}{\numberline {D.1}Real tensor representation}{28}{section.D.1}%
+\contentsline {section}{\numberline {D.2}Rank reduction}{28}{section.D.2}%
+\contentsline {section}{\numberline {D.3}Convergence of the extraction}{28}{section.D.3}%
+\contentsline {chapter}{\numberline {E}Linear program for non-polynomial functions}{30}{appendix.E}%
+\contentsline {section}{\numberline {E.1}Construction of the LP and of the single SDP}{30}{section.E.1}%
+\contentsline {section}{\numberline {E.2}Proof of convergence}{31}{section.E.2}%
+\contentsline {chapter}{\numberline {F}LOCC feasibility SDP}{32}{appendix.F}%
+\contentsline {section}{\numberline {F.1}Construction of the SDP}{32}{section.F.1}%
+\contentsline {section}{\numberline {F.2}Detection at finite level}{33}{section.F.2}%
+\contentsline {chapter}{\numberline {G}Further numerical results}{34}{appendix.G}%

@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99e
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper_annotated.aux
+Reallocating 'name_of_file' (item size: 1) to 21 items.
+Reallocating 'name_of_file' (item size: 1) to 13 items.
+Reallocating 'name_of_file' (item size: 1) to 7 items.
+The style file: ieeetr.bst
+Database file #1: paper_annotatedNotes.bib
+Database file #2: Bibliography.bib
+You've used 57 entries,
+            1876 wiz_defined-function locations,
+            859 strings with 12035 characters,
+and the built_in function-call counts, 17455 in all, are:
+= -- 1941
+> -- 466
+< -- 0
++ -- 181
+- -- 124
+* -- 1157
+:= -- 2281
+add.period$ -- 63
+call.type$ -- 57
+change.case$ -- 55
+chr.to.int$ -- 0
+cite$ -- 57
+duplicate$ -- 973
+empty$ -- 1565
+format.name$ -- 124
+if$ -- 4405
+int.to.chr$ -- 0
+int.to.str$ -- 57
+missing$ -- 59
+newline$ -- 180
+num.names$ -- 57
+pop$ -- 100
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 816
+stack$ -- 0
+substring$ -- 1352
+swap$ -- 526
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 178
+width$ -- 59
+write$ -- 621
